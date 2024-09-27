@@ -61,23 +61,29 @@ def get_bboxes_coordinates(chosen_model, img, classes=[], conf=0.5, rectangle_th
     img_h, img_w = results[0].boxes[0].orig_shape
     label_and_coors = []
     for result in results:
-        for box in result.boxes:
+        for i, box in enumerate(result.boxes):
             label_name = result.names[int(box.cls[0])]
             coor_x, coor_y = map_coordinates(box, screen_w, screen_h, img_w, img_h)
             label_and_coors.append((label_name, coor_x, coor_y))
             cv2.rectangle(img, (int(box.xyxy[0][0]), int(box.xyxy[0][1])),
                           (int(box.xyxy[0][2]), int(box.xyxy[0][3])), (255, 0, 0), rectangle_thickness)
-            cv2.putText(img, f"{result.names[int(box.cls[0])]}",
-                        (int(box.xyxy[0][0]), int(box.xyxy[0][1]) - 10),
-                        cv2.FONT_HERSHEY_PLAIN, 1, (255, 0, 0), text_thickness)
+            cv2.putText(img, f"{i}",
+                        (int(box.xyxy[0][0]) + 10, int(box.xyxy[0][1]) + 30),
+                        cv2.FONT_HERSHEY_PLAIN, 2, (255, 0, 0), 2)
     return label_and_coors, img
 
 
 if __name__ == "__main__":
-    image_pth = "/Users/chun/Documents/Bridgent/yolov10_form/object_detection/train/aug_dataset_1/screenshot_test_1.png"
+    image_pth = "/Users/chun/Documents/Bridgent/yolov10_form/object_detection/train/aug_dataset_1/screenshot_test_2.png"
     image = cv2.imread(image_pth)
-    model = YOLOv10("/Users/chun/Documents/Bridgent/yolov10_form/object_detection/weights/best_2.pt")
-    label_and_coors, result_img = get_bboxes_coordinates(model, image, classes=[], conf=0.3)
+    model = YOLOv10("/Users/chun/Documents/Bridgent/yolov10_form/object_detection/weights/best.pt")
+    label_and_coors, result_img = get_bboxes_coordinates(model, image, classes=[], conf=0.8)
     print(label_and_coors)
+    # Save the image to a file
+    
+    output_path = "/Users/chun/Documents/Bridgent/yolov10_form/llm/output_image_2.png"  # Change this path as needed
+    cv2.imwrite(output_path, result_img)
+    
     cv2.imshow("Image", result_img)
     cv2.waitKey(0)
+    cv2.destroyAllWindows()

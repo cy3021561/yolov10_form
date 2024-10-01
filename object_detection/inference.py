@@ -14,7 +14,7 @@ def predict(chosen_model, img, classes=[], conf=0.5):
     return results
 
 
-def map_coordinates(box, screen_w, screen_h, img_w, img_h, shift_x=5, shift_y=5):
+def map_coordinates(box, screen_w, screen_h, img_w, img_h, shift_x=10, shift_y=10):
     """
     Transform the images bbox coordinates on a screenshot scale
 
@@ -22,6 +22,7 @@ def map_coordinates(box, screen_w, screen_h, img_w, img_h, shift_x=5, shift_y=5)
     - box (ultralytics.engine.results.Boxes): YOLO bbox object
     - screen_w, screen_h (int, int): Screen width and height
     - img_w, img_h (int, int): Image width and height
+    - shift_x, shift_y (int, int): Shift value by pixel level, in order to let cursor click that field
 
     Returns:
     - tuple: (coordinate_x, coordinate_y)
@@ -48,29 +49,30 @@ def get_bboxes_coordinates(chosen_model, img, classes=[], conf=0.5, rectangle_th
 
     Args:
     - chosen_model (ultralytics.engine.model.Model): Loaded YOLO model object
-    - img (np array): Input image loaded by cv2.imread()
+    - img (numpy.ndarray): Input image loaded by cv2.imread()
     - class (list of str): A list of class names to filter predictions to
     - conf (float): The minimum confidence threshold for a prediction to be considered
 
     Returns:
     - tuple: (label_name, coordinate_x, coordinate_y)
-    - np array: labeled images for doublechecking
+    - numpy.ndarray: labeled images for doublechecking
     """
     results = predict(chosen_model, img, classes, conf=conf)
     screen_w, screen_h = pyautogui.size()
     img_h, img_w = results[0].boxes[0].orig_shape
     label_and_coors = []
+    copy_img = img.copy()
     for result in results:
         for i, box in enumerate(result.boxes):
             label_name = result.names[int(box.cls[0])]
             coor_x, coor_y = map_coordinates(box, screen_w, screen_h, img_w, img_h)
             label_and_coors.append((label_name, coor_x, coor_y))
-            cv2.rectangle(img, (int(box.xyxy[0][0]), int(box.xyxy[0][1])),
+            cv2.rectangle(copy_img, (int(box.xyxy[0][0]), int(box.xyxy[0][1])),
                           (int(box.xyxy[0][2]), int(box.xyxy[0][3])), (255, 0, 0), rectangle_thickness)
-            cv2.putText(img, f"{i}",
+            cv2.putText(copy_img, f"{i}",
                         (int(box.xyxy[0][0]) + 10, int(box.xyxy[0][1]) + 30),
                         cv2.FONT_HERSHEY_PLAIN, 2, (255, 0, 0), 2)
-    return label_and_coors, img
+    return label_and_coors, copy_img
 
 
 if __name__ == "__main__":

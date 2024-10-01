@@ -59,7 +59,6 @@ def process_input_content(input_blocks):
 
 
 if __name__ == "__main__":
-    # Load the .env file from the parent directory
     from dotenv import load_dotenv
 
     dotenv_path = os.path.join(os.path.dirname(__file__), '..', '.env')
@@ -79,7 +78,8 @@ if __name__ == "__main__":
         {
             "input": [
                 {"type": "image_url", "image_path": image_path1},
-                {"type": "text", "text": "Match the blue bounding boxes to it's relative label name for the web form page image, you should format your result in a jason format."},
+                {"type": "text", "text": "Match the blue bounding boxes to it's corresponding label name for the web form page image, \
+                                          you should format your result in a jason format."},
             ],
             "output": """{
                         "Patient Demographics":{

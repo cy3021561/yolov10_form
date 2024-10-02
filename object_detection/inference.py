@@ -43,7 +43,7 @@ def map_coordinates(box, screen_w, screen_h, img_w, img_h, shift_x=10, shift_y=1
     return int(adjusted_x_top_left) + shift_x, int(adjusted_y_top_left) + shift_y
 
 
-def get_bboxes_coordinates(chosen_model, img, classes=[], conf=0.5, rectangle_thickness=2, text_thickness=1):
+def get_bboxes_coordinates(chosen_model, img, classes=[], conf=0.5, rectangle_thickness=2, save_img=False):
     """
     Get the bbox coordinates based on screenshot scale for future cursor movements
 
@@ -71,7 +71,12 @@ def get_bboxes_coordinates(chosen_model, img, classes=[], conf=0.5, rectangle_th
                           (int(box.xyxy[0][2]), int(box.xyxy[0][3])), (255, 0, 0), rectangle_thickness)
             cv2.putText(copy_img, f"{i}",
                         (int(box.xyxy[0][0]) + 10, int(box.xyxy[0][1]) + 30),
-                        cv2.FONT_HERSHEY_PLAIN, 2, (255, 0, 0), 2)
+                        cv2.FONT_HERSHEY_PLAIN, 2, (255, 0, 0), 3)
+            
+    if save_img:
+        output_path = "/Users/chun/Documents/Bridgent/yolov10_form/llm/output_image_1.png"  # Change this path as needed
+        cv2.imwrite(output_path, copy_img)
+
     return label_and_coors, copy_img
 
 
@@ -83,7 +88,7 @@ if __name__ == "__main__":
     print(label_and_coors)
     # Save the image to a file
     
-    output_path = "/Users/chun/Documents/Bridgent/yolov10_form/llm/output_image_2.png"  # Change this path as needed
+    output_path = "/Users/chun/Documents/Bridgent/yolov10_form/llm/output_image_2.png"
     cv2.imwrite(output_path, result_img)
     
     cv2.imshow("Image", result_img)

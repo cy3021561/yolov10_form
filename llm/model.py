@@ -150,6 +150,7 @@ if __name__ == "__main__":
     img = cv2.imread(img_pth)
     model = YOLOv10("/Users/chun/Documents/Bridgent/yolov10_form/object_detection/weights/best.pt")
     field_coors, bboxes_img = get_bboxes_coordinates(model, img, classes=[], conf=0.8, save_img=True)
+    print(field_coors)
     img_parts = split_image_vertically(bboxes_img)
     prompt_messeage = """
     **Prompt:**  

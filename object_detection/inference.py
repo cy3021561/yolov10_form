@@ -64,9 +64,9 @@ def get_bboxes_coordinates(chosen_model, img, classes=[], conf=0.5, rectangle_th
     copy_img = img.copy()
     for result in results:
         for i, box in enumerate(result.boxes):
-            label_name = result.names[int(box.cls[0])]
+            label_type = result.names[int(box.cls[0])]
             coor_x, coor_y = map_coordinates(box, screen_w, screen_h, img_w, img_h)
-            label_and_coors.append((label_name, coor_x, coor_y))
+            label_and_coors.append((i, label_type, coor_x, coor_y))
             cv2.rectangle(copy_img, (int(box.xyxy[0][0]), int(box.xyxy[0][1])),
                           (int(box.xyxy[0][2]), int(box.xyxy[0][3])), (255, 0, 0), rectangle_thickness)
             cv2.putText(copy_img, f"{i}",

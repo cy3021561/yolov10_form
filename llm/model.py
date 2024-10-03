@@ -1,10 +1,7 @@
 from object_detection.inference import get_bboxes_coordinates
 from langchain_core.messages import HumanMessage, SystemMessage
 from langchain_core.output_parsers import JsonOutputParser
-from langchain_core.prompts import PromptTemplate
 from langchain_openai import ChatOpenAI
-from ocr.find_cor_test import locate_all_text_on_screen
-from llm.field_match import associate_labels_to_fields
 import pyautogui
 import cv2
 import json
@@ -18,6 +15,28 @@ def read_page_json(json_path):
         data = json.load(file)
 
     return data
+
+
+# Can improve the space complexity
+def integrate_coordinates(llm_res, od_res):
+    """
+    Generate the final matching results for future keyboard actions
+
+    Args:
+    - llm_res(dict): {column_name: bbox_index}
+    - od_res(dict): {bbox_index: (action_type, coor_x, coor_y)}
+
+    Return:
+    - Dict of {column_name: (action_type, coor_x, coor_y)}
+    """
+    name_type_coor = {}
+    for name, bbox_index in llm_res.items():
+        if bbox_index in od_res:
+            name_type_coor[name] = (od_res[bbox_index])
+        else:
+            name_type_coor[name] = ""
+    
+    return name_type_coor
 
 
 def split_image_vertically(img, num_splits=4, overlap_ratio=0.1):
@@ -66,8 +85,6 @@ def draw_candidates_on_image(image, candidates):
     Returns:
         numpy.ndarray: The image with dots and labels drawn.
     """
-    import cv2
-
     # Get the screen size using pyautogui
     screen_width, screen_height = pyautogui.size()
 
@@ -150,7 +167,7 @@ if __name__ == "__main__":
     img = cv2.imread(img_pth)
     model = YOLOv10("/Users/chun/Documents/Bridgent/yolov10_form/object_detection/weights/best.pt")
     field_coors, bboxes_img = get_bboxes_coordinates(model, img, classes=[], conf=0.8, save_img=True)
-    print(field_coors)
+    # print(field_coors)
     img_parts = split_image_vertically(bboxes_img)
     prompt_messeage = """
     **Prompt:**  
@@ -183,20 +200,7 @@ if __name__ == "__main__":
         print(f"Processing part {i+1}, result: {existing_columns}")
         # cv2.imshow(f"Image Part {i+1}", part)
         # cv2.waitKey(0)
-    
-    # cv2.destroyAllWindows()
+        # cv2.destroyAllWindows()
 
-
-    # # Match with ocr results    
-    # label_coors, _ = locate_all_text_on_screen(img)
-    # candidates = associate_labels_to_fields(label_coors, field_coors)
-    # print(candidates)
-
-    # # Draw candidates on the image
-    # result_image = draw_candidates_on_image(img, candidates)
-
-    # # Display the image
-    # cv2.imwrite("matches_candidates.png", result_image)
-    # cv2.imshow("Candidates", result_image)
-    # cv2.waitKey(0)
-    # cv2.destroyAllWindows()
+    name_type_coor = integrate_coordinates(existing_columns, field_coors)
+    print(name_type_coor)

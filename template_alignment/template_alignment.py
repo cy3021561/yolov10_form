@@ -16,6 +16,8 @@ class TemplateAligner:
         self.sift = self._initialize_sift()
         self.flann = self._initialize_flann()
         self.template_matching_threshold = self.DEFAULT_TEMPLATE_MATCHING_THRESHOLD
+        self.current_x = None
+        self.current_y = None
 
     def _show_image(self, np_image):
         cv2.imshow("tmp", np_image)
@@ -65,10 +67,10 @@ class TemplateAligner:
 
         # Template matching
         max_val, max_loc = self.template_match(screenshot_img, template_img)
-        print(max_val)
 
         if max_val < self.DEFAULT_TEMPLATE_MATCHING_THRESHOLD:
             print("No template matching found.")
+            return False
         
         # # Show template matching result
         # w, h = template_img.shape[::-1]
@@ -80,36 +82,13 @@ class TemplateAligner:
 
         # Get the desired coordinates
         w, h = template_img.shape[::-1]
-        scaled_x, scaled_y = self.get_screen_coordinates(screenshot_img, max_loc[0] + w // 2, max_loc[1] + h // 2)
-        return scaled_x, scaled_y
-
-def smooth_move_to(x, y, duration=2):
-    start_x, start_y = pyautogui.position()
-    dx = x - start_x
-    dy = y - start_y
-
-    start_time = time.time()
-
-    while True:
-        elapsed_time = time.time() - start_time
-        if elapsed_time > duration:
-            break
-
-        t = elapsed_time / duration
-        eased_t = (1 - math.cos(t * math.pi)) / 2  # easeInOutSine function
-
-        target_x = start_x + dx * eased_t
-        target_y = start_y + dy * eased_t
-        pyautogui.moveTo(target_x, target_y)
-
-    # Ensure the mouse ends up exactly at the target (x, y)
-    pyautogui.moveTo(x, y)
+        self.current_x, self.current_y = self.get_screen_coordinates(screenshot_img, max_loc[0] + w // 2, max_loc[1] + h // 2)
+        return True
 
 def test_align(template_path):
     aligner = TemplateAligner()
     scaled_x, scaled_y = aligner.align(template_path)
     print(scaled_x, scaled_y)
-    smooth_move_to(scaled_x, scaled_y)
 
 
 if __name__ == "__main__":

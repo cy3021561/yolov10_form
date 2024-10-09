@@ -3,7 +3,7 @@ import time
 import math
 
 
-def add_delay(before=0.3, after=0.3):
+def add_delay(before=0, after=0):
     """Decorator to add a delay before and after the execution of a function."""
     def decorator(func):
         def wrapper(*args, **kwargs):
@@ -16,7 +16,7 @@ def add_delay(before=0.3, after=0.3):
         return wrapper
     return decorator
 
-def smooth_move_to(x, y, duration=2):
+def smooth_move_to(x, y, duration=1):
     start_x, start_y = pyautogui.position()
     dx = x - start_x
     dy = y - start_y
@@ -59,10 +59,8 @@ class Control:
             )
         
     @add_delay()
-    def mouse_click(self, button="left", clicks=1, interval=0.1):
+    def mouse_click(self, button="left", clicks=1, interval=0.5):
         try:
-            if self.verbose:
-                print(f"Current mouse x and y: {pyautogui.position()}")
             pyautogui.click(button=button, clicks=clicks, interval=interval)
         except Exception as e:
             raise RuntimeError(
@@ -70,8 +68,30 @@ class Control:
             )
         
     @add_delay()
-    def keyboard_write(self):
-        pass
+    def keyboard_write(self, text, interval=0.1):
+        """
+        Type out a string of characters with some realistic delay.
+        """
+        try:
+            pyautogui.write(text, interval=interval)
+        except Exception as e:
+            raise RuntimeError(
+                f"An error occurred while keyboard writing: {e}. "
+            )
 
-    def screenshot(self):
-        pass
+    @add_delay()
+    def keyboard_press(self, *args, presses=1, interval=0.1):
+        keys = args
+        """
+        Press a key or a sequence of keys.
+
+        If keys is a string, it is treated as a single key and is pressed the number of times specified by presses.
+        If keys is a list, each key in the list is pressed once.
+        """
+        try:
+            pyautogui.press(keys, presses=presses, interval=interval)
+        except Exception as e:
+            raise RuntimeError(
+                f"An error occurred while keyboard pressing: {e}. "
+            )
+    

@@ -3,7 +3,7 @@ import time
 import math
 
 
-def add_delay(before=0, after=0):
+def add_delay(before=0.1, after=0.2):
     """Decorator to add a delay before and after the execution of a function."""
     def decorator(func):
         def wrapper(*args, **kwargs):
@@ -16,7 +16,7 @@ def add_delay(before=0, after=0):
         return wrapper
     return decorator
 
-def smooth_move_to(x, y, duration=1):
+def smooth_move_to(x, y, duration=0.5):
     start_x, start_y = pyautogui.position()
     dx = x - start_x
     dy = y - start_y
@@ -68,7 +68,7 @@ class Control:
             )
         
     @add_delay()
-    def keyboard_write(self, text, interval=0.1):
+    def keyboard_write(self, text, interval=0.2):
         """
         Type out a string of characters with some realistic delay.
         """
@@ -80,8 +80,7 @@ class Control:
             )
 
     @add_delay()
-    def keyboard_press(self, *args, presses=1, interval=0.1):
-        keys = args
+    def keyboard_press(self, button, presses=1, interval=0.2):
         """
         Press a key or a sequence of keys.
 
@@ -89,9 +88,29 @@ class Control:
         If keys is a list, each key in the list is pressed once.
         """
         try:
-            pyautogui.press(keys, presses=presses, interval=interval)
+            print(button)
+            pyautogui.press(button, presses=presses, interval=interval)
         except Exception as e:
             raise RuntimeError(
                 f"An error occurred while keyboard pressing: {e}. "
             )
-    
+        
+    @add_delay()
+    def keyboard_hotkey(self, *args, interval=0.1):
+        """
+        Press a sequence of keys in the order they are provided, and then release them in reverse order.
+        """
+        try:
+            print(args)
+            pyautogui.hotkey(*args, interval=interval)
+        except Exception as e:
+            raise RuntimeError(
+                f"An error occurred while doing keyboard hotkey: {e}. "
+            )
+        
+    def keyboard_release_all_keys(self):
+        # List of common keys that might be held down
+        keys_to_release = ['command', 'ctrl', 'alt', 'shift', 'win', 'enter', 'esc', 'fn']
+
+        for key in keys_to_release:
+            pyautogui.keyUp(key)

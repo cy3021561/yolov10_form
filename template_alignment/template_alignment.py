@@ -147,6 +147,40 @@ class TemplateAligner:
         )
         return True
 
+    def get_aligned_cropped(self, template_image_path, target_image_path=None):
+        """
+        Output the aligned-cropped image on the target image or current screen.
+
+        Args:
+            template_image_path (str): Path to the template image.
+            target_image_path (str, optional): Path to the target image. If None, a screenshot is used.
+
+        Returns:
+            PIL.Image.Image: The cropped matched area as a PIL image.
+        """
+        # Read the template image in grayscale
+        template_img = cv2.imread(template_image_path, cv2.IMREAD_GRAYSCALE)
+
+        # Use provided target image or take a screenshot
+        if target_image_path:
+            target_img = cv2.imread(target_image_path, cv2.IMREAD_GRAYSCALE)
+        else:
+            target_img = self.get_screenshot()  # Capture the current screen
+
+        # Perform template matching
+        max_val, max_loc = self.template_match(target_img, template_img)
+
+        # Check if the match is above the threshold
+        if max_val < self.DEFAULT_TEMPLATE_MATCHING_THRESHOLD:
+            print(max_val)
+            print("No template matching found.")
+            return None
+        
+        cropped_pil = self.cropped_match(template_img, target_img, max_loc)
+        
+        return cropped_pil
+
+
     def cropped_match(self, template_img, target_img, max_loc, show=False):
         """
         Crop the matched area from the target image.
@@ -243,13 +277,19 @@ class TemplateAligner:
 # Usage sample
 def test_align(template_path, target_path=None):
     aligner = TemplateAligner()
-    result = aligner.align(
-        template_path,
-        target_path,
-        show_crop=True,
-        show_overlay=True
-    )
-    print(f"Match template {template_path} result: {result}")
+    # result = aligner.align(
+    #     template_path,
+    #     target_path,
+    #     show_crop=True,
+    #     show_overlay=True
+    # )
+    # print(f"Match template {template_path} result: {result}")
+    
+    # Just output cropped image
+    cropped_img = aligner.get_aligned_cropped(template_path, target_path)
+    if cropped_img:
+        cropped_img.show()
+
 
 if __name__ == "__main__":
     import os

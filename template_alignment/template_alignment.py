@@ -1,55 +1,93 @@
 import cv2
 import pyautogui
 import numpy as np
-import math
-import time
-
+from PIL import Image
 
 class TemplateAligner:
-    FLANN_INDEX_KDTREE = 1
-    MIN_MATCH_COUNT = 100
-    DEFAULT_TEMPLATE_MATCHING_THRESHOLD = 0.6
+    # Default threshold for template matching; can be adjusted as needed
+    DEFAULT_TEMPLATE_MATCHING_THRESHOLD = 0.1
 
     def __init__(self, debug=False, screen_width=None, screen_height=None):
+        """
+        Initialize the TemplateAligner instance.
+
+        Args:
+            debug (bool): Flag to enable debugging mode.
+            screen_width (int, optional): Width of the screen. Defaults to actual screen width if not provided.
+            screen_height (int, optional): Height of the screen. Defaults to actual screen height if not provided.
+        """
         self.debug = debug
         self.screen_width, self.screen_height = self._get_screen_dimensions(screen_width, screen_height)
-        self.sift = self._initialize_sift()
-        self.flann = self._initialize_flann()
         self.template_matching_threshold = self.DEFAULT_TEMPLATE_MATCHING_THRESHOLD
-        self.current_x = None
-        self.current_y = None
+        self.current_x = None  # Stores the current x-coordinate of the matched template
+        self.current_y = None  # Stores the current y-coordinate of the matched template
 
     def _show_image(self, np_image):
+        """
+        Display an image using OpenCV.
+
+        Args:
+            np_image (numpy.ndarray): The image to display.
+        """
         cv2.imshow("tmp", np_image)
         cv2.waitKey(0)
         cv2.destroyAllWindows()
         return
 
     def _get_screen_dimensions(self, screen_w, screen_h):
+        """
+        Get the screen dimensions.
+
+        Args:
+            screen_w (int, optional): Provided screen width.
+            screen_h (int, optional): Provided screen height.
+
+        Returns:
+            tuple: A tuple containing screen width and height.
+        """
         if screen_w is not None and screen_h is not None:
             return screen_w, screen_h
-        return pyautogui.size()
-
-    def _initialize_sift(self):
-        return cv2.SIFT_create()
-
-    def _initialize_flann(self):
-        index_params = dict(algorithm=self.FLANN_INDEX_KDTREE, trees=20)
-        search_params = dict(checks=100)
-        return cv2.FlannBasedMatcher(index_params, search_params)
+        return pyautogui.size()  # Returns the actual screen size
 
     def template_match(self, screenshot_img, template_img):
+        """
+        Perform template matching to find the template in the screenshot.
+
+        Args:
+            screenshot_img (numpy.ndarray): The screenshot image in which to search.
+            template_img (numpy.ndarray): The template image to search for.
+
+        Returns:
+            tuple: A tuple containing the maximum correlation value and location.
+        """
         result = cv2.matchTemplate(screenshot_img, template_img, cv2.TM_CCOEFF_NORMED)
         _, max_val, _, max_loc = cv2.minMaxLoc(result)
         return max_val, max_loc
 
     def get_screenshot(self):
+        """
+        Capture a screenshot of the current screen.
+
+        Returns:
+            numpy.ndarray: The grayscale screenshot image.
+        """
         screenshot = pyautogui.screenshot()
         screenshot_np = np.array(screenshot)
         screenshot_gray = cv2.cvtColor(screenshot_np, cv2.COLOR_RGB2GRAY)
         return screenshot_gray
 
     def get_screen_coordinates(self, screenshot_image, coor_x, coor_y):
+        """
+        Convert image coordinates to screen coordinates.
+
+        Args:
+            screenshot_image (numpy.ndarray): The image from which coordinates are taken.
+            coor_x (int): X-coordinate in the image.
+            coor_y (int): Y-coordinate in the image.
+
+        Returns:
+            tuple: Scaled X and Y coordinates relative to the screen size.
+        """
         img_width, img_height = screenshot_image.shape[::-1]
         scale_x = img_width / self.screen_width
         scale_y = img_height / self.screen_height
@@ -60,46 +98,172 @@ class TemplateAligner:
 
         return scaled_center_x, scaled_center_y
 
-    def align(self, template_image_path):
-        # Read Images
+    def align(self, template_image_path, target_image_path=None, show_crop=False, show_overlay=False):
+        """
+        Align the template image with the target image or current screen.
+
+        Args:
+            template_image_path (str): Path to the template image.
+            target_image_path (str, optional): Path to the target image. If None, a screenshot is used.
+            show_crop (bool, optional): Whether to save the cropped matched area.
+            show_overlay (bool, optional): Whether to save an overlay comparison image.
+
+        Returns:
+            bool: True if alignment is successful, False otherwise.
+        """
+        # Read the template image in grayscale
         template_img = cv2.imread(template_image_path, cv2.IMREAD_GRAYSCALE)
-        screenshot_img = self.get_screenshot() # Need to update screenshot dymanicly in the future
 
-        # Template matching
-        max_val, max_loc = self.template_match(screenshot_img, template_img)
+        # Use provided target image or take a screenshot
+        if target_image_path:
+            target_img = cv2.imread(target_image_path, cv2.IMREAD_GRAYSCALE)
+        else:
+            target_img = self.get_screenshot()  # Capture the current screen
 
+        # Perform template matching
+        max_val, max_loc = self.template_match(target_img, template_img)
+
+        # Check if the match is above the threshold
         if max_val < self.DEFAULT_TEMPLATE_MATCHING_THRESHOLD:
+            print(max_val)
             print("No template matching found.")
             return False
-        
-        # # Show template matching result
-        # w, h = template_img.shape[::-1]
-        # top_left = max_loc
-        # bot_right = (top_left[0] + w, top_left[1] + h)
-        # cv2.rectangle(screenshot_img, top_left, bot_right, 0, 5)
-        # cv2.circle(screenshot_img, (top_left[0] + w // 2, top_left[1] + h // 2), 10, (0, 0, 0), 3)
-        # self._show_image(screenshot_img)
 
-        # Get the desired coordinates
+        # Optionally save the cropped matched area
+        if show_crop:
+            cropped_pil = self.cropped_match(template_img, target_img, max_loc)
+            cropped_pil.save("matched_cropped.png")
+
+        # Optionally save an overlay comparison image
+        if show_overlay:
+            template_pil, target_pil = self.generate_overlay(template_img, target_img, max_loc)
+            compare_pil = self.create_comparison_image(template_pil, target_pil)
+            compare_pil.save("alignment_comparison.png")
+
+        # Calculate the center coordinates of the matched area
         w, h = template_img.shape[::-1]
-        self.current_x, self.current_y = self.get_screen_coordinates(screenshot_img, max_loc[0] + w // 2, max_loc[1] + h // 2)
+        self.current_x, self.current_y = self.get_screen_coordinates(
+            target_img, max_loc[0] + w // 2, max_loc[1] + h // 2
+        )
         return True
 
-def test_align(template_path):
-    aligner = TemplateAligner()
-    scaled_x, scaled_y = aligner.align(template_path)
-    print(scaled_x, scaled_y)
+    def cropped_match(self, template_img, target_img, max_loc):
+        """
+        Crop the matched area from the target image.
 
+        Args:
+            template_img (numpy.ndarray): The template image.
+            target_img (numpy.ndarray): The target image where the template was matched.
+            max_loc (tuple): The top-left coordinates of the matched area.
+
+        Returns:
+            PIL.Image.Image: The cropped matched area as a PIL image.
+        """
+        # Get the dimensions of the template image
+        w, h = template_img.shape[::-1]
+        # Crop the matched region from the target image
+        cropped_img = target_img[max_loc[1]:max_loc[1] + h, max_loc[0]:max_loc[0] + w]
+        # Convert the cropped image to PIL format
+        cropped_pil = Image.fromarray(cv2.cvtColor(cropped_img, cv2.COLOR_BGR2RGB))
+        # Optionally display the cropped image
+        self._show_image(cropped_img)
+        return cropped_pil
+
+    def generate_overlay(self, template_img, target_img, max_loc):
+        """
+        Generate an overlay of the template image on the matched area in the target image.
+
+        Args:
+            template_img (numpy.ndarray): The template image.
+            target_img (numpy.ndarray): The target image.
+            max_loc (tuple): The top-left coordinates of the matched area.
+
+        Returns:
+            tuple: A tuple containing the template and target images as PIL images.
+        """
+        # Get the dimensions of the template image
+        h, w = template_img.shape[:2]
+
+        # Crop the matched region from the target image
+        cropped_target_img = target_img[max_loc[1]:max_loc[1] + h, max_loc[0]:max_loc[0] + w]
+
+        # Convert images to BGR format if they are grayscale
+        if len(cropped_target_img.shape) == 2:
+            cropped_target_img_bgr = cv2.cvtColor(cropped_target_img, cv2.COLOR_GRAY2BGR)
+        else:
+            cropped_target_img_bgr = cropped_target_img
+
+        if len(template_img.shape) == 2:
+            template_img_bgr = cv2.cvtColor(template_img, cv2.COLOR_GRAY2BGR)
+        else:
+            template_img_bgr = template_img
+
+        # Resize the template image to match the cropped target image size
+        template_img_bgr_resized = cv2.resize(template_img_bgr, (w, h))
+
+        # Create an overlay by blending the two images
+        overlay = cv2.addWeighted(cropped_target_img_bgr, 0.5, template_img_bgr_resized, 0.5, 0)
+        # Optionally display the overlay
+        self._show_image(overlay)
+
+        # Convert images to PIL format
+        template_pil = Image.fromarray(cv2.cvtColor(template_img_bgr_resized, cv2.COLOR_BGR2RGB))
+        target_pil = Image.fromarray(cv2.cvtColor(cropped_target_img_bgr, cv2.COLOR_BGR2RGB))
+
+        return template_pil, target_pil
+
+    def create_comparison_image(self, aligned_image: Image.Image, reference_image: Image.Image) -> Image.Image:
+        """
+        Create a side-by-side comparison image of the aligned and reference images.
+
+        Args:
+            aligned_image (PIL.Image.Image): The aligned template image.
+            reference_image (PIL.Image.Image): The cropped target image.
+
+        Returns:
+            PIL.Image.Image: The comparison image.
+        """
+        # Ensure both images have the same dimensions
+        max_width = max(aligned_image.width, reference_image.width)
+        max_height = max(aligned_image.height, reference_image.height)
+
+        aligned_resized = aligned_image.resize((max_width, max_height))
+        reference_resized = reference_image.resize((max_width, max_height))
+
+        # Create a new image to hold both images side by side
+        comparison_image = Image.new('RGB', (max_width * 2, max_height))
+        comparison_image.paste(aligned_resized, (0, 0))
+        comparison_image.paste(reference_resized, (max_width, 0))
+
+        return comparison_image
+
+def test_align(template_path):
+    """
+    Test the alignment of a given template image.
+
+    Args:
+        template_path (str): Path to the template image to test.
+    """
+    aligner = TemplateAligner()
+    result = aligner.align(
+        template_path,
+        './template_alignment/target_1.png',
+        show_crop=True,
+        show_overlay=True
+    )
+    print(f"Match template {template_path} result: {result}")
 
 if __name__ == "__main__":
     import os
     import glob
 
-    image_folder = './images'
+    # Folder containing the test images
+    image_folder = './template_alignment/test_images'
+    # Get all PNG image paths in the folder
     image_paths = glob.glob(os.path.join(image_folder, '*.png'))
+    print(image_paths)
 
-    # Process each image
+    # Process each image in the folder
     for template_path in image_paths:
         print(template_path)
         test_align(template_path)
-

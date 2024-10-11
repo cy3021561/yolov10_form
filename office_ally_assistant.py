@@ -148,4 +148,5 @@ if __name__ == "__main__":
         "patient_relationship_second": "Child"
     }
     test(test_patient_input, test_insurance_input)
+    # Need a field content checking method
     # Need a scrolling logic, something like when it finish filling one section, scroll down for the next one

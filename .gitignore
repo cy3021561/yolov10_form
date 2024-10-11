@@ -169,3 +169,4 @@ object_detection/weights
 *.jpg
 *.png
 yolov10-3.9
+.DS_Store

@@ -131,12 +131,12 @@ class TemplateAligner:
 
         # Optionally save the cropped matched area
         if show_crop:
-            cropped_pil = self.cropped_match(template_img, target_img, max_loc)
+            cropped_pil = self.cropped_match(template_img, target_img, max_loc, show_crop)
             cropped_pil.save("matched_cropped.png")
 
         # Optionally save an overlay comparison image
         if show_overlay:
-            template_pil, target_pil = self.generate_overlay(template_img, target_img, max_loc)
+            template_pil, target_pil = self.generate_overlay(template_img, target_img, max_loc, show_overlay)
             compare_pil = self.create_comparison_image(template_pil, target_pil)
             compare_pil.save("alignment_comparison.png")
 
@@ -147,7 +147,7 @@ class TemplateAligner:
         )
         return True
 
-    def cropped_match(self, template_img, target_img, max_loc):
+    def cropped_match(self, template_img, target_img, max_loc, show=False):
         """
         Crop the matched area from the target image.
 
@@ -163,13 +163,14 @@ class TemplateAligner:
         w, h = template_img.shape[::-1]
         # Crop the matched region from the target image
         cropped_img = target_img[max_loc[1]:max_loc[1] + h, max_loc[0]:max_loc[0] + w]
-        # Convert the cropped image to PIL format
         cropped_pil = Image.fromarray(cv2.cvtColor(cropped_img, cv2.COLOR_BGR2RGB))
-        # Optionally display the cropped image
-        self._show_image(cropped_img)
+
+        if show:
+            self._show_image(cropped_img)
+        
         return cropped_pil
 
-    def generate_overlay(self, template_img, target_img, max_loc):
+    def generate_overlay(self, template_img, target_img, max_loc, show=False):
         """
         Generate an overlay of the template image on the matched area in the target image.
 
@@ -203,8 +204,9 @@ class TemplateAligner:
 
         # Create an overlay by blending the two images
         overlay = cv2.addWeighted(cropped_target_img_bgr, 0.5, template_img_bgr_resized, 0.5, 0)
-        # Optionally display the overlay
-        self._show_image(overlay)
+        
+        if show:
+            self._show_image(overlay)
 
         # Convert images to PIL format
         template_pil = Image.fromarray(cv2.cvtColor(template_img_bgr_resized, cv2.COLOR_BGR2RGB))
@@ -237,17 +239,13 @@ class TemplateAligner:
 
         return comparison_image
 
-def test_align(template_path):
-    """
-    Test the alignment of a given template image.
 
-    Args:
-        template_path (str): Path to the template image to test.
-    """
+# Usage sample
+def test_align(template_path, target_path=None):
     aligner = TemplateAligner()
     result = aligner.align(
         template_path,
-        './template_alignment/target_1.png',
+        target_path,
         show_crop=True,
         show_overlay=True
     )
@@ -257,8 +255,9 @@ if __name__ == "__main__":
     import os
     import glob
 
-    # Folder containing the test images
+    target_img_path = './template_alignment/target_1.png'
     image_folder = './template_alignment/test_images'
+    
     # Get all PNG image paths in the folder
     image_paths = glob.glob(os.path.join(image_folder, '*.png'))
     print(image_paths)
@@ -266,4 +265,4 @@ if __name__ == "__main__":
     # Process each image in the folder
     for template_path in image_paths:
         print(template_path)
-        test_align(template_path)
+        test_align(template_path, target_img_path)

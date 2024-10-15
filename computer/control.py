@@ -44,9 +44,9 @@ def smooth_move_to(x, y, duration=0.2):
 class Control:
     """A class to simulate human behavior."""
     
-    def __init__(self, control_key=None, verbose=False):
+    def __init__(self, modifier_key=None, verbose=False):
         self.verbose = verbose
-        self.control_key = control_key
+        self.modifier_key = modifier_key
 
     @add_delay()
     def mouse_move(self, coor_x, coor_y, smooth=False):
@@ -68,6 +68,18 @@ class Control:
             raise RuntimeError(
                 f"An error occurred while clicking the mouse: {e}. "
             )
+    
+    @add_delay()
+    def mouse_scroll(self, clicks):
+        """
+        Scrolls the mouse wheel up or down the specified number of clicks. Negative clicks value scroll down, vice versa.
+        """
+        try:
+            pyautogui.scroll(clicks)
+        except Exception as e:
+            raise RuntimeError(
+                f"An error occurred while scrolling: {e}. "
+            )
         
     @add_delay()
     def keyboard_write(self, text, interval=0.01, copy_paste=True):
@@ -80,14 +92,14 @@ class Control:
             else:
                 pyperclip.copy(text)
                 # Paste
-                self.keyboard_hotkey(self.control_key, 'v')
+                self.keyboard_hotkey(self.modifier_key, 'v')
         except Exception as e:
             raise RuntimeError(
                 f"An error occurred while keyboard writing: {e}. "
             )
 
     @add_delay()
-    def keyboard_press(self, button, presses=1, interval=0.2):
+    def keyboard_press(self, button, presses=1, interval=0.1):
         """
         Press a key or a sequence of keys.
 

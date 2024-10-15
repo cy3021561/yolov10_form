@@ -13,11 +13,11 @@ class OfficeAllyAssistant:
         self.page = page # Use this to distinguish webpage categories
         self.template_img_dir, self.template_config_dir = self._initialize_template_dir()
         self.input_information = input_information
-        self.control_key = self._initialize_control_key()
-        self.control = Control(control_key=self.control_key)
+        self.modifier_key = self._initialize_modifier_key()
+        self.control = Control(modifier_key=self.modifier_key)
         self.aligner = TemplateAligner()
 
-    def _initialize_control_key(self):
+    def _initialize_modifier_key(self):
         if self.operating_system.lower() == "darwin":
             return "command"
         else:
@@ -50,11 +50,9 @@ class OfficeAllyAssistant:
         else:
             print("Change page failed.")
         
-
     def get_coordinates(self, column_name):
         img_pth = os.path.join(self.template_img_dir, column_name + ".png")
         if not self.aligner.align(img_pth):
-            print("No alignment.")
             return False
         return True
 
@@ -72,7 +70,7 @@ class OfficeAllyAssistant:
                 )
             self.control.mouse_move(self.aligner.current_x, self.aligner.current_y, smooth=True)
             self.control.mouse_click(clicks=1)
-            self.control.keyboard_hotkey(self.control_key, 'up')
+            self.control.keyboard_hotkey(self.modifier_key, 'up')
             self.control.keyboard_press('space')
             self.control.keyboard_release_all_keys() # Release all possible functional key to prevent from activate any hotkey
             self.control.keyboard_press(press_key, presses=press_time)
@@ -89,13 +87,15 @@ class OfficeAllyAssistant:
         if self.get_coordinates(column_name):
             self.control.mouse_move(self.aligner.current_x, self.aligner.current_y, smooth=True)
             self.control.mouse_click(clicks=1)
-            time.sleep(3) # Wait for popout window show up, here also need a checking logic in the future
-            # self.control.keyboard_release_all_keys()
+            # Wait popout window loading
+            while not self.get_coordinates('loadcheck_insurance_list'):
+                time.sleep(1)
+                print("Still loading...")
             self.control.keyboard_write(column_value)
             self.control.keyboard_press('enter')
             
             if self.get_coordinates("no_results"):
-                self.control.keyboard_hotkey(self.control_key, 'w')
+                self.control.keyboard_hotkey(self.modifier_key, 'w')
             elif self.get_coordinates("select_button"):
                 self.control.mouse_move(self.aligner.current_x, self.aligner.current_y, smooth=True)
                 self.control.mouse_click(clicks=1)
@@ -106,11 +106,7 @@ class OfficeAllyAssistant:
             self.control.mouse_move(self.aligner.current_x, self.aligner.current_y, smooth=True)
             self.control.mouse_click(clicks=1)
             self.control.keyboard_write(column_value)
-            self.control.keyboard_press('enter')
-            self.control.keyboard_press('tab')
-            self.control.keyboard_press('space')
-            self.control.keyboard_press('esc')
-
+            self.control.keyboard_press(['enter', 'tab', 'space', 'esc'])
 
     def fill_information(self):
         for column_name, column_value in self.input_information.items():
@@ -141,14 +137,14 @@ def test(patient_input, insurance_input):
     # Fill insurance information
     assistant.fill_information()
     end = time.time()
-    print(f"Spend: {end - start}")
+    print(f"Total process time: {end - start} secs")
 
 if __name__ == "__main__":
     # Need a input validation method
     test_patient_input = {
         "last_name": "Yang",
         "first_name": "Tom",
-        "birth_date": "11011001",
+        "birth_date": "11011999",
         "legal_sex": "Male",
         "ssn": "123456789",
         "address1": "123 N Apple Ave",
@@ -170,5 +166,6 @@ if __name__ == "__main__":
         "patient_relationship_second": "Spouse"
     }
     test(test_patient_input, test_insurance_input)
+    # Need a uniform checking methods for window loading, current too hard-code
     # Need a field content checking method
     # Need a scrolling logic, something like when it finish filling one section, scroll down for the next one

@@ -2,6 +2,50 @@ import cv2
 import pyautogui
 import numpy as np
 from PIL import Image
+import time
+from functools import wraps
+
+
+
+def measure_average_time(method):
+    """
+    Decorator to measure and print the average execution time of a method.
+
+    Args:
+        method (callable): The method to be decorated.
+
+    Returns:
+        callable: The wrapped method with timing functionality.
+    """
+    @wraps(method)
+    def timed(*args, **kwargs):
+        # Start the timer
+        start_time = time.time()
+        # Call the original method
+        result = method(*args, **kwargs)
+        # Stop the timer
+        end_time = time.time()
+        # Calculate elapsed time
+        elapsed_time = end_time - start_time
+
+        # Initialize tracking attributes if they don't exist
+        if not hasattr(timed, 'total_time'):
+            timed.total_time = 0.0
+            timed.call_count = 0
+
+        # Update total time and call count
+        timed.total_time += elapsed_time
+        timed.call_count += 1
+
+        # Calculate average time
+        average_time = timed.total_time / timed.call_count
+
+        # Print the average time
+        print(f"Average time spent on '{method.__name__}': {average_time:.6f} seconds over {timed.call_count} calls")
+
+        return result
+    return timed
+
 
 class TemplateAligner:
     # Default threshold for template matching; can be adjusted as needed
@@ -98,6 +142,7 @@ class TemplateAligner:
 
         return scaled_center_x, scaled_center_y
 
+    @measure_average_time
     def align(self, template_image_path, target_image_path=None, show_crop=False, show_overlay=False):
         """
         Align the template image with the target image or current screen.

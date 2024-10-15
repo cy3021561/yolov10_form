@@ -1,9 +1,10 @@
 import pyautogui
+import pyperclip
 import time
 import math
 
 
-def add_delay(before=0.1, after=0.2):
+def add_delay(before=0.05, after=0.05):
     """Decorator to add a delay before and after the execution of a function."""
     def decorator(func):
         def wrapper(*args, **kwargs):
@@ -16,7 +17,7 @@ def add_delay(before=0.1, after=0.2):
         return wrapper
     return decorator
 
-def smooth_move_to(x, y, duration=0.5):
+def smooth_move_to(x, y, duration=0.2):
     start_x, start_y = pyautogui.position()
     dx = x - start_x
     dy = y - start_y
@@ -43,8 +44,9 @@ def smooth_move_to(x, y, duration=0.5):
 class Control:
     """A class to simulate human behavior."""
     
-    def __init__(self, verbose=False):
+    def __init__(self, control_key=None, verbose=False):
         self.verbose = verbose
+        self.control_key = control_key
 
     @add_delay()
     def mouse_move(self, coor_x, coor_y, smooth=False):
@@ -59,7 +61,7 @@ class Control:
             )
         
     @add_delay()
-    def mouse_click(self, button="left", clicks=1, interval=0.5):
+    def mouse_click(self, button="left", clicks=1, interval=0.1):
         try:
             pyautogui.click(button=button, clicks=clicks, interval=interval)
         except Exception as e:
@@ -68,12 +70,17 @@ class Control:
             )
         
     @add_delay()
-    def keyboard_write(self, text, interval=0.2):
+    def keyboard_write(self, text, interval=0.01, copy_paste=True):
         """
         Type out a string of characters with some realistic delay.
         """
         try:
-            pyautogui.write(text, interval=interval)
+            if not copy_paste:
+                pyautogui.write(text, interval=interval)
+            else:
+                pyperclip.copy(text)
+                # Paste
+                self.keyboard_hotkey(self.control_key, 'v')
         except Exception as e:
             raise RuntimeError(
                 f"An error occurred while keyboard writing: {e}. "
@@ -88,7 +95,6 @@ class Control:
         If keys is a list, each key in the list is pressed once.
         """
         try:
-            print(button)
             pyautogui.press(button, presses=presses, interval=interval)
         except Exception as e:
             raise RuntimeError(
@@ -101,7 +107,6 @@ class Control:
         Press a sequence of keys in the order they are provided, and then release them in reverse order.
         """
         try:
-            print(args)
             pyautogui.hotkey(*args, interval=interval)
         except Exception as e:
             raise RuntimeError(

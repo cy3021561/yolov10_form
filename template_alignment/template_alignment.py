@@ -5,7 +5,7 @@ from PIL import Image
 
 class TemplateAligner:
     # Default threshold for template matching; can be adjusted as needed
-    DEFAULT_TEMPLATE_MATCHING_THRESHOLD = 0.1
+    DEFAULT_TEMPLATE_MATCHING_THRESHOLD = 0.7
 
     def __init__(self, debug=False, screen_width=None, screen_height=None):
         """
@@ -124,8 +124,9 @@ class TemplateAligner:
         max_val, max_loc = self.template_match(target_img, template_img)
 
         # Check if the match is above the threshold
+        print(template_image_path)
+        print(max_val)
         if max_val < self.DEFAULT_TEMPLATE_MATCHING_THRESHOLD:
-            print(max_val)
             print("No template matching found.")
             return False
 

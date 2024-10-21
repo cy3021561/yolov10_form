@@ -68,18 +68,6 @@ class Control:
             raise RuntimeError(
                 f"An error occurred while clicking the mouse: {e}. "
             )
-    
-    @add_delay()
-    def mouse_scroll_to_position(self, target_y):
-        """
-        Scrolls the screen vertically until the mouse reaches the target Y coordinate.
-        """
-        try:
-            pass
-        except Exception as e:
-            raise RuntimeError(
-                f"An error occurred while scrolling to postion: {e}. "
-            )
         
     @add_delay()
     def mouse_scroll(self, clicks):

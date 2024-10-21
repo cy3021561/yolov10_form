@@ -49,7 +49,7 @@ def measure_average_time(method):
 
 class TemplateAligner:
     # Default threshold for template matching; can be adjusted as needed
-    DEFAULT_TEMPLATE_MATCHING_THRESHOLD = 0.7
+    DEFAULT_TEMPLATE_MATCHING_THRESHOLD = 0.9
 
     def __init__(self, debug=False, screen_width=None, screen_height=None):
         """
@@ -142,7 +142,7 @@ class TemplateAligner:
 
         return scaled_center_x, scaled_center_y
 
-    @measure_average_time
+    # @measure_average_time
     def align(self, template_image_path, target_image_path=None, show_crop=False, show_overlay=False):
         """
         Align the template image with the target image or current screen.
@@ -169,10 +169,8 @@ class TemplateAligner:
         max_val, max_loc = self.template_match(target_img, template_img)
 
         # Check if the match is above the threshold
-        print(template_image_path)
-        print(max_val)
         if max_val < self.DEFAULT_TEMPLATE_MATCHING_THRESHOLD:
-            print("No template matching found.")
+            print(f"No matching found for {template_image_path}. Score: {max_val}")
             return False
 
         # Optionally save the cropped matched area

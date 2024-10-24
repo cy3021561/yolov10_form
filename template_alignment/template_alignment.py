@@ -49,7 +49,7 @@ def measure_average_time(method):
 
 class TemplateAligner:
     # Default threshold for template matching; can be adjusted as needed
-    DEFAULT_TEMPLATE_MATCHING_THRESHOLD = 0.9
+    DEFAULT_TEMPLATE_MATCHING_THRESHOLD = 0.85
 
     def __init__(self, debug=False, screen_width=None, screen_height=None):
         """

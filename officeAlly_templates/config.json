@@ -1,0 +1,39 @@
+{
+    "base_dir": "./officeAlly_templates",
+    "general_paths": {
+        "images": "general/images",
+        "configs": "general/configs"
+    },
+    "pages": {
+        "patient": {
+            "images": "patient_input/images",
+            "configs": "patient_input/configs"
+        },
+        "insurance": {
+            "images": "insurance_input/images",
+            "configs": "insurance_input/configs"
+        },
+        "visit_info": {
+            "images": "visit_info/images",
+            "configs": "visit_info/configs"
+        },
+        "billing_info": {
+            "images": "billing_info/images",
+            "configs": "billing_info/configs"
+        },
+        "billing_options": {
+            "images": "billing_options/images",
+            "configs": "billing_options/configs"
+        }
+    },
+    "task_route": {
+        "add_new_patient": [
+            "manage_patient_tab",
+            "add_new_patient"
+        ],
+        "add_new_visit": [
+            "patient_visits_tab",
+            "add_new_visit"
+        ]
+    }
+}

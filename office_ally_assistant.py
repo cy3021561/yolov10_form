@@ -1,4 +1,5 @@
 import os
+import json
 import platform
 import time
 from computer.control import Control
@@ -8,10 +9,24 @@ from utils.generate_selection_list import load_dictionary
 
 
 class OfficeAllyAssistant:
-    def __init__(self, page="general", input_information=None):
+    def __init__(self, page="general", input_information=None, template_img_dir=None, template_config_dir=None):
+        """
+        Initialize the assistant with page type and optional custom template directories.
+        """
         self.operating_system = platform.system()
-        self.page = page # Use this to distinguish webpage categories
-        self.template_img_dir, self.template_config_dir = self._initialize_template_dir()
+        self.page = page
+
+        # Load directories from JSON config
+        self.config_data = self._load_config()
+        self.general_img_dir = os.path.join(self.config_data["base_dir"], self.config_data["general_paths"]["images"])
+        self.general_config_dir = os.path.join(self.config_data["base_dir"], self.config_data["general_paths"]["configs"])
+
+        if template_img_dir and template_config_dir:
+            self.template_img_dir = template_img_dir
+            self.template_config_dir = template_config_dir
+        else:
+            self.template_img_dir, self.template_config_dir = self._initialize_template_dir_from_config(self.config_data)
+
         self.input_information = input_information
         self.modifier_key = self._initialize_modifier_key()
         self.scroll_amount_per_click = None
@@ -19,7 +34,7 @@ class OfficeAllyAssistant:
         self.scroll_click_now = 0
         self.control = Control(modifier_key=self.modifier_key)
         self.aligner = TemplateAligner()
-        self.page_elements_coors = {} # {NAME: (scrolling_clicks, coor_x, coor_y)}
+        self.page_elements_coors = {}  # {NAME: (scrolling_clicks, coor_x, coor_y)}
 
     def _initialize_modifier_key(self):
         if self.operating_system.lower() == "darwin":
@@ -27,25 +42,32 @@ class OfficeAllyAssistant:
         else:
             return "ctrl"
 
-    def _initialize_template_dir(self):
-        base_dir = "./templates"
-        page_dirs = {
-            "general": (
-                os.path.join(base_dir, "officeAlly_general", "images"),
-                os.path.join(base_dir, "officeAlly_general", "configs"),
-            ),
-            "patient": (
-                os.path.join(base_dir, "officeAlly_patient_input", "images"),
-                os.path.join(base_dir, "officeAlly_patient_input", "configs"),
-            ),
-            "insurance": (
-                os.path.join(base_dir, "officeAlly_insurance_input", "images"),
-                os.path.join(base_dir, "officeAlly_insurance_input", "configs"),
-            ),
-        }
+    def _load_config(self):
+        """
+        Loads the JSON configuration file.
+        """
+        config_path = './officeAlly_templates/config.json'  # Update with your config file path
+        if not os.path.exists(config_path):
+            raise FileNotFoundError(f"Configuration file not found at {config_path}")
+        
+        with open(config_path, 'r') as f:
+            return json.load(f)
+
+    def _initialize_template_dir_from_config(self, config_data):
+        """
+        Initializes template directories from JSON config.
+        """
+        base_dir = config_data["base_dir"]
+        page_dirs = config_data["pages"]
+
         if self.page not in page_dirs:
             raise ValueError(f"Invalid page type: {self.page}")
-        return page_dirs[self.page]
+        
+        page_info = page_dirs[self.page]
+        img_dir = os.path.join(base_dir, page_info["images"])
+        config_dir = os.path.join(base_dir, page_info["configs"])
+
+        return img_dir, config_dir
     
     def _intialize_scrolling_parameters(self):
         first_y, second_y = None, None
@@ -75,15 +97,40 @@ class OfficeAllyAssistant:
         self.control.mouse_scroll(self.scroll_total_clicks_current_page)
         return
     
+    def assign_task(self, task_name):
+        if task_name not in self.config_data["task_route"]:
+            raise ValueError(f"Invalid task: {task_name}")
+        route_items = self.config_data["task_route"][task_name]
+        # Back to top
+        self.control.mouse_move(self.aligner.screen_width // 2, self.aligner.screen_height // 2)
+        self.control.mouse_scroll(100)
+
+        # Back to home page first, need optimized for reading the homepage images
+        for home_img_name in ["homepage_0", "homepage_1", "homepage_2"]:
+            if self.get_coordinates(column_name=home_img_name, img_dir=self.general_img_dir):
+                self.control.mouse_move(self.aligner.current_x, self.aligner.current_y)
+                self.control.mouse_click(clicks=2)
+                time.sleep(3)
+                break
+            
+        for img_name in route_items:
+            if self.get_coordinates(column_name=img_name, img_dir=self.general_img_dir):
+                self.control.mouse_move(self.aligner.current_x, self.aligner.current_y)
+                self.control.mouse_click(clicks=2)
+                time.sleep(3)
+            else:
+                raise RuntimeError (f"Failed for assigning new task, step {img_name}")
+        print(route_items)
+
     # NEED MODIFY
-    def change_page(self, page, input_information):
+    def change_page_within_task(self, page, input_information):
         column_name = "to_" + page + "_from_" + self.page # Need a more comprehensive method for this in the future
         if self.get_coordinates(column_name):
             self.control.mouse_move(self.aligner.current_x, self.aligner.current_y)
             self.control.mouse_click(clicks=2)
             self.page = page
             self.input_information = input_information
-            self.template_img_dir, self.template_config_dir = self._initialize_template_dir()
+            self.template_img_dir, self.template_config_dir = self._initialize_template_dir_from_config(self.config_data)
         else:
             raise RuntimeError(
                 f"An error occurred while changing page. "
@@ -98,8 +145,11 @@ class OfficeAllyAssistant:
             self.scroll_click_now = target_scroll_click
         return coor_x, coor_y
 
-    def get_coordinates(self, column_name):
-        img_pth = os.path.join(self.template_img_dir, column_name + ".png")
+    def get_coordinates(self, column_name, img_dir=None):
+        if not img_dir:
+            img_pth = os.path.join(self.template_img_dir, column_name + ".png")
+        else:
+            img_pth = os.path.join(img_dir, column_name + ".png")
         if not self.aligner.align(img_pth):
             return False
         return True
@@ -112,11 +162,14 @@ class OfficeAllyAssistant:
             for key in self.input_information.keys():
                 if key not in self.page_elements_coors and self.get_coordinates(key):
                     self.page_elements_coors[key] = (scrolling_count, self.aligner.current_x, self.aligner.current_y)
+            if len(self.page_elements_coors) == len(self.input_information):
+                break
             self.control.mouse_scroll(-5)
             scrolling_count += 5
         self.control.mouse_scroll(scrolling_count + 5)
         return
-
+    
+    # TODO
     def check_filled_content(self, columm_value):
         """
         Crop the section based on coordinates, and use ocr to check the content
@@ -160,19 +213,20 @@ class OfficeAllyAssistant:
             coor_x, coor_y = self.scroll_and_get_coors(column_name)
             self.control.mouse_move(coor_x, coor_y, smooth=True)
             self.control.mouse_click(clicks=1)
-            # self.scroll_after_fill()
-            # Wait popout window loading
-            while not self.get_coordinates('loadcheck_insurance_list'):
-                time.sleep(1)
-                print("Still loading...")
+            time.sleep(1)
+            # while not self.get_coordinates('loadcheck_insurance_list'):
+            #     time.sleep(1)
+            #     print("Still loading...")
             self.control.keyboard_write(column_value)
             self.control.keyboard_press('enter')
             
-            if self.get_coordinates("no_results"):
-                self.control.keyboard_hotkey(self.modifier_key, 'w')
-            elif self.get_coordinates("select_button"):
+            # if self.get_coordinates("no_results"):
+            #     self.control.keyboard_hotkey(self.modifier_key, 'w')
+            time.sleep(1)
+            if self.get_coordinates("select_button"):
                 self.control.mouse_move(self.aligner.current_x, self.aligner.current_y, smooth=True)
                 self.control.mouse_click(clicks=1)
+                time.sleep(1)
         return
     
     # Click -> Fill in -> Enter -> Tab -> Space -> Esc
@@ -181,28 +235,126 @@ class OfficeAllyAssistant:
             coor_x, coor_y = self.scroll_and_get_coors(column_name)
             self.control.mouse_move(coor_x, coor_y, smooth=True)
             self.control.mouse_click(clicks=1)
-            # self.scroll_after_fill()
             self.control.keyboard_write(column_value)
             self.control.keyboard_press(['enter', 'tab', 'space', 'esc'])
         return
+    
+    # TODO: NEED A BETTER LOGIC
+    def fill_visit_patient_id(self, column_name, column_value):
+        if column_name in self.page_elements_coors:
+            coor_x, coor_y = self.scroll_and_get_coors(column_name)
+            self.control.mouse_move(coor_x, coor_y, smooth=True)
+            self.control.mouse_click(clicks=1)
+            last_name_val = column_value["last_name"]
+            birth_date_val = column_value["birth_date"]
+            self.control.keyboard_write(last_name_val)
+            self.control.keyboard_press('tab', presses=4)
+            self.control.keyboard_write(birth_date_val, copy_paste=False)
+            self.control.keyboard_press('tab', presses=4)
+            self.control.keyboard_press('enter')
 
-    def fill_information(self):
-        # Initialize the scroll amount per click if it's not set
-        # if not self.scroll_amount_per_click and self.input_information:
+            # TODO: What if there's no search result?
+            while not self.get_coordinates("select_button"):
+                time.sleep(1)
+
+            self.control.mouse_move(self.aligner.current_x, self.aligner.current_y, smooth=True)
+            self.control.mouse_click(clicks=1)
+
+        return
+                
+
+    def fill_visit_provider_id(self, column_name, column_value):
+        if column_name in self.page_elements_coors:
+            coor_x, coor_y = self.scroll_and_get_coors(column_name)
+            self.control.mouse_move(coor_x, coor_y, smooth=True)
+            self.control.mouse_click(clicks=1)
+            last_name_val = column_value["last_name"]
+            self.control.keyboard_write(last_name_val)
+            self.control.keyboard_press('enter')
+
+            # TODO: What if there's no search result?
+            while not self.get_coordinates("select_button"):
+                time.sleep(1)
+
+            self.control.mouse_move(self.aligner.current_x, self.aligner.current_y, smooth=True)
+            self.control.mouse_click(clicks=1)
+
+        return
+
+    def fill_ICD_10_codes(self, column_name, column_value):
+        """
+        Args: column_value: List of strings. e.g. ["CODE1", "CODE2", ...]
+        """
+        if column_name in self.page_elements_coors:
+            coor_x, coor_y = self.scroll_and_get_coors(column_name)
+            self.control.mouse_move(coor_x, coor_y, smooth=True)
+            self.control.mouse_click(clicks=1)
+            for i, code in enumerate(column_value):
+                if i != 0:
+                    self.control.keyboard_press('tab', presses=2)
+                self.control.keyboard_write(code)
+                # TODO: check the potential options are loaded
+                time.sleep(1)
+                # Select option
+                self.control.keyboard_press(['down', 'enter'])
+
+    def fill_CPT_codes(self, column_name, column_value):
+        """
+        Args: column_value: List of tuple. e.g. [("CODE1", "POINTER1"), ("CODE2", "POINTER2") ...]
+        """
+        if column_name in self.page_elements_coors:
+            coor_x, coor_y = self.scroll_and_get_coors(column_name)
+            self.control.mouse_move(coor_x, coor_y, smooth=True)
+            self.control.mouse_click(clicks=1)
+            for i, (code, pointer) in enumerate(column_value):
+                if i != 0:
+                    self.control.keyboard_press('tab', presses=11)
+                    self.control.keyboard_press('enter')
+                self.control.keyboard_write(code)
+                self.control.keyboard_press('enter')
+
+                # TODO: What if there's no search result?
+                while not self.get_coordinates("select_button"):
+                    time.sleep(1)
+
+                self.control.mouse_move(self.aligner.current_x, self.aligner.current_y, smooth=True)
+                self.control.mouse_click(clicks=1)
+                time.sleep(1)
+                
+                # Pointer
+                self.control.keyboard_press('tab', presses=5)
+                self.control.keyboard_write(pointer, copy_paste=False)
+
+    def run(self):
+        """
+        Execute the task for the current page.
+        """
+        # Initialize the scroll amount per click and the length of current page
+        print("Meaturing scrolling parameters ...")
         self._intialize_scrolling_parameters()
         
+        print("Detecting all corresponding coordinates ...")
         self.get_all_coordinates_on_page()
         
         for column_name, column_value in self.input_information.items():
             print(column_name, column_value)
+            print(type(column_name), type(column_value))
             if column_name in ["legal_sex", "state", "patient_relationship_primary", "patient_relationship_second"]:
                 self.fill_dropdown_column(column_name, column_value)
-            elif column_name in ["insurance_co_primary", "insurance_co_second"]:
+            elif column_name in ["insurance_co_primary", "insurance_co_second", "facility", "billing_provider"]:
                 self.fill_popout_column(column_name, column_value)
             elif column_name in ["insurance_type_primary", "insurance_type_second"]:
                 self.fill_searchbox_column(column_name, column_value)
-            # Numerical columns NOT allow paste action
-            elif column_name in ["birth_date", "ssn", "zip_code", "cell_phone"]:
+            elif column_name in ["patient_id"]:
+                self.fill_visit_patient_id(column_name, column_value)
+            elif column_name in ["provider_id"]:
+                self.fill_visit_provider_id(column_name, column_value)
+            elif column_name in ["icd10_codes"]:
+                self.fill_ICD_10_codes(column_name, column_value)
+            elif column_name in ["cpt_codes"]:
+                self.fill_CPT_codes(column_name, column_value)
+            # Numerical columns do NOT allow paste action
+            elif column_name in ["birth_date", "ssn", "zip_code", "cell_phone", "hospital_dates"]:
                 self.fill_inputbox_column(column_name, column_value, can_paste=False)
             else:
                 self.fill_inputbox_column(column_name, column_value)
@@ -210,29 +362,49 @@ class OfficeAllyAssistant:
         # Back to top
         self.control.mouse_scroll(self.scroll_click_now + 10)
         
-        # Scrolling to top (NEED CHECK) -> something var to calculate how far have you scrooled
-        # self.control.mouse_scroll(100)
         return
 
 
 
 
 
-
-
-def test(patient_input, insurance_input):
-    import time
-    start = time.time()
+def test_add_new_patient(task_name, patient_input, insurance_input):
     assistant = OfficeAllyAssistant(page="patient", input_information=patient_input)
     time.sleep(2)
+
+    # Go to the task page
+    assistant.assign_task(task_name=task_name)
+    
     # Fill patient information
-    assistant.fill_information()
+    assistant.run()
 
     # Fill insurance information
-    assistant.change_page(page="insurance", input_information=insurance_input)
-    assistant.fill_information()
-    end = time.time()
-    print(f"Total process time: {end - start} secs")
+    assistant.change_page_within_task(page="insurance", input_information=insurance_input)
+    assistant.run()
+
+def test_add_new_visit(task_name, visit_info, billing_info, billing_options):
+    assistant = OfficeAllyAssistant(page="visit_info", input_information=visit_info)
+    time.sleep(2)
+
+    # Go to the task page
+    assistant.assign_task(task_name=task_name)
+    
+    # Fill visit info page
+    assistant.run()
+
+    # Fill billing info page
+    assistant.change_page_within_task(page="billing_info", input_information=billing_info)
+    # Make sure the type is ICD 10
+    if assistant.get_coordinates("ICD_type_9_to_10"):
+        assistant.control.mouse_move(assistant.aligner.current_x, assistant.aligner.current_y)
+        assistant.control.mouse_click()
+    assistant.run()
+
+    # Fill billing options page
+    assistant.change_page_within_task(page="billing_options", input_information=billing_options)
+    assistant.run()
+
+    
 
 if __name__ == "__main__":
     # Need a input validation method
@@ -248,8 +420,9 @@ if __name__ == "__main__":
         "state": "CA",
         "zip_code": "90045",
         "cell_phone": "2342345555",
-        "email": "abc.ddd@gmail.com"
+        "email": "abc.ddd@gmail.com",
     }
+
     test_insurance_input = {
         "insurance_type_primary": "Medicare",
         "insurance_co_primary": "NORIDIAN HEALTHCARE SOLUTIONS",
@@ -260,8 +433,36 @@ if __name__ == "__main__":
         "patient_relationship_second": "Self",
         "subscriber_id_second": "99999999A",
     }
-    test(test_patient_input, test_insurance_input)
-    # Need a uniform checking methods for window loading, current too hard-code
+
+    test_visit_info = {
+        "patient_id" : {
+            "last_name": "Patient",
+            "birth_date": "11011999",
+        },
+        "provider_id": {
+            "last_name": "Doctor",
+        },
+
+    }
+
+    test_billing_info = {
+        "icd10_codes" : ["F200", "E119"],
+        "cpt_codes": [("99232", "A"), ("99213", "B")],
+
+    }
+
+    test_billing_options = {
+        "facility" : "SACF",
+        "billing_provider": "",
+        "hospital_dates": "10242024"
+
+    }
+
+
+    start = time.time()
+    # test_add_new_patient("add_new_patient", test_patient_input, test_insurance_input)
+    test_add_new_visit("add_new_visit", test_visit_info, test_billing_info, test_billing_options)
+    end = time.time()
+    print(f"Total process time: {end - start} secs")
+    # Need a uniform checking methods for window loading, current too hard-coding
     # Need a field content checking method
-    # Need a scrolling logic, something like when it finish filling one section, scroll down for the next one
-    ### Follow the top-down filling logic, each time after filling, check the column content

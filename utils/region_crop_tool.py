@@ -4,8 +4,8 @@ import time
 from PIL import ImageGrab
 
 # Parameters for the cropping region
-CROP_WIDTH = 300  # Width of the cropping region
-CROP_HEIGHT = 250  # Height of the cropping region
+CROP_WIDTH = 350 # Width of the cropping region
+CROP_HEIGHT = 150  # Height of the cropping region
 
 
 def capture_screenshot(center_x, center_y, width, height):

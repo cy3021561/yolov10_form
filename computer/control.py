@@ -4,7 +4,7 @@ import time
 import math
 
 
-def add_delay(before=0.05, after=0.05):
+def add_delay(before=0.05, after=0.1):
     """Decorator to add a delay before and after the execution of a function."""
     def decorator(func):
         def wrapper(*args, **kwargs):

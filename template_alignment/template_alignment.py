@@ -62,7 +62,6 @@ class TemplateAligner:
         """
         self.debug = debug
         self.screen_width, self.screen_height = self._get_screen_dimensions(screen_width, screen_height)
-        self.template_matching_threshold = self.DEFAULT_TEMPLATE_MATCHING_THRESHOLD
         self.current_x = None  # Stores the current x-coordinate of the matched template
         self.current_y = None  # Stores the current y-coordinate of the matched template
 
@@ -143,7 +142,7 @@ class TemplateAligner:
         return scaled_center_x, scaled_center_y
 
     # @measure_average_time
-    def align(self, template_image_path, target_image_path=None, show_crop=False, show_overlay=False):
+    def align(self, template_image_path, target_image_path=None, show_crop=False, show_overlay=False, custom_threshold=None):
         """
         Align the template image with the target image or current screen.
 
@@ -156,6 +155,12 @@ class TemplateAligner:
         Returns:
             bool: True if alignment is successful, False otherwise.
         """
+        # Set custom threshold if it exist
+        if custom_threshold:
+            threshold_val = custom_threshold
+        else:
+            threshold_val = self.DEFAULT_TEMPLATE_MATCHING_THRESHOLD
+
         # Read the template image in grayscale
         template_img = cv2.imread(template_image_path, cv2.IMREAD_GRAYSCALE)
 
@@ -169,7 +174,7 @@ class TemplateAligner:
         max_val, max_loc = self.template_match(target_img, template_img)
 
         # Check if the match is above the threshold
-        if max_val < self.DEFAULT_TEMPLATE_MATCHING_THRESHOLD:
+        if max_val < threshold_val:
             print(f"No matching found for {template_image_path}. Score: {max_val}")
             return False
 
@@ -191,7 +196,7 @@ class TemplateAligner:
         )
         return True
 
-    def get_aligned_cropped(self, template_image_path, target_image_path=None):
+    def get_aligned_cropped(self, template_image_path, target_image_path=None, custom_threshold=None):
         """
         Output the aligned-cropped image on the target image or current screen.
 
@@ -202,6 +207,12 @@ class TemplateAligner:
         Returns:
             PIL.Image.Image: The cropped matched area as a PIL image.
         """
+        # Set custom threshold if it exist
+        if custom_threshold:
+            threshold_val = custom_threshold
+        else:
+            threshold_val = self.DEFAULT_TEMPLATE_MATCHING_THRESHOLD
+
         # Read the template image in grayscale
         template_img = cv2.imread(template_image_path, cv2.IMREAD_GRAYSCALE)
 
@@ -215,7 +226,7 @@ class TemplateAligner:
         max_val, max_loc = self.template_match(target_img, template_img)
 
         # Check if the match is above the threshold
-        if max_val < self.DEFAULT_TEMPLATE_MATCHING_THRESHOLD:
+        if max_val < threshold_val:
             print(max_val)
             print("No template matching found.")
             return None

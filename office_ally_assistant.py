@@ -3,6 +3,7 @@ import json
 import platform
 import time
 from computer.control import Control
+from computer.screen_effect import ScreenOverlay, OverlayState
 from template_alignment.template_alignment import TemplateAligner
 from utils.generate_selection_list import load_dictionary
 
@@ -13,20 +14,9 @@ class OfficeAllyAssistant:
         """
         Initialize the assistant with page type and optional custom template directories.
         """
+        # Initialize basic attributes first
         self.operating_system = platform.system()
         self.page = page
-
-        # Load directories from JSON config
-        self.config_data = self._load_config()
-        self.general_img_dir = os.path.join(self.config_data["base_dir"], self.config_data["general_paths"]["images"])
-        self.general_config_dir = os.path.join(self.config_data["base_dir"], self.config_data["general_paths"]["configs"])
-
-        if template_img_dir and template_config_dir:
-            self.template_img_dir = template_img_dir
-            self.template_config_dir = template_config_dir
-        else:
-            self.template_img_dir, self.template_config_dir = self._initialize_template_dir_from_config(self.config_data)
-
         self.input_information = input_information
         self.modifier_key = self._initialize_modifier_key()
         self.scroll_amount_per_click = None
@@ -34,7 +24,30 @@ class OfficeAllyAssistant:
         self.scroll_click_now = 0
         self.control = Control(modifier_key=self.modifier_key)
         self.aligner = TemplateAligner()
-        self.page_elements_coors = {}  # {NAME: (scrolling_clicks, coor_x, coor_y)}
+        self.page_elements_coors = {}
+        
+        # Initialize overlay
+        self.overlay = ScreenOverlay()
+        self.overlay.set_state(OverlayState.READY)
+        self.overlay.update_status("Initializing system...")
+        
+        try:
+            # Load configurations
+            self.config_data = self._load_config()
+            self.general_img_dir = os.path.join(self.config_data["base_dir"], self.config_data["general_paths"]["images"])
+            self.general_config_dir = os.path.join(self.config_data["base_dir"], self.config_data["general_paths"]["configs"])
+
+            if template_img_dir and template_config_dir:
+                self.template_img_dir = template_img_dir
+                self.template_config_dir = template_config_dir
+            else:
+                self.template_img_dir, self.template_config_dir = self._initialize_template_dir_from_config(self.config_data)
+                
+            self.overlay.update_status("System initialized")
+        except Exception as e:
+            self.overlay.update_status(f"Initialization error: {str(e)}")
+            self.overlay.set_state(OverlayState.RUNNING)  # Red to indicate error
+            raise e
 
     def _initialize_modifier_key(self):
         if self.operating_system.lower() == "darwin":
@@ -70,6 +83,9 @@ class OfficeAllyAssistant:
         return img_dir, config_dir
     
     def _intialize_scrolling_parameters(self):
+        self.overlay.set_state(OverlayState.RUNNING)
+        self.overlay.update_status("Initializing scrolling parameters...")
+        
         first_y, second_y = None, None
         anchor_template = "anchor"
         footer_template = "footer"
@@ -95,6 +111,7 @@ class OfficeAllyAssistant:
 
         # Back to top
         self.control.mouse_scroll(self.scroll_total_clicks_current_page)
+        self.overlay.update_status("Scrolling parameters initialized")
         return
     
     def assign_task(self, task_name):
@@ -154,7 +171,9 @@ class OfficeAllyAssistant:
             return False
         return True
     
+    # TODO: What if you can't find all matches
     def get_all_coordinates_on_page(self):
+        self.overlay.update_status("Detecting page elements...")
         self.page_elements_coors = {}
         scrolling_count = 0
         # When you not reaching the end of the page and you haven't found every coors yet, keep searching
@@ -167,6 +186,7 @@ class OfficeAllyAssistant:
             self.control.mouse_scroll(-5)
             scrolling_count += 5
         self.control.mouse_scroll(scrolling_count + 5)
+        self.overlay.update_status("Page elements detected")
         return
     
     # TODO
@@ -257,8 +277,10 @@ class OfficeAllyAssistant:
             while not self.get_coordinates("select_button"):
                 time.sleep(1)
 
-            self.control.mouse_move(self.aligner.current_x, self.aligner.current_y, smooth=True)
-            self.control.mouse_click(clicks=1)
+            self.control.keyboard_press('tab', presses=16)
+            self.control.keyboard_press('enter')
+            # self.control.mouse_move(self.aligner.current_x, self.aligner.current_y, smooth=True)
+            # self.control.mouse_click(clicks=1)
 
         return
                 
@@ -276,8 +298,10 @@ class OfficeAllyAssistant:
             while not self.get_coordinates("select_button"):
                 time.sleep(1)
 
-            self.control.mouse_move(self.aligner.current_x, self.aligner.current_y, smooth=True)
-            self.control.mouse_click(clicks=1)
+            self.control.keyboard_press('tab', presses=12)
+            self.control.keyboard_press('enter')
+            # self.control.mouse_move(self.aligner.current_x, self.aligner.current_y, smooth=True)
+            # self.control.mouse_click(clicks=1)
 
         return
 
@@ -306,6 +330,7 @@ class OfficeAllyAssistant:
             coor_x, coor_y = self.scroll_and_get_coors(column_name)
             self.control.mouse_move(coor_x, coor_y, smooth=True)
             self.control.mouse_click(clicks=1)
+            time.sleep(1)
             for i, (code, pointer) in enumerate(column_value):
                 if i != 0:
                     self.control.keyboard_press('tab', presses=11)
@@ -325,84 +350,136 @@ class OfficeAllyAssistant:
                 self.control.keyboard_press('tab', presses=5)
                 self.control.keyboard_write(pointer, copy_paste=False)
 
+    def cleanup(self):
+        """Clean up resources"""
+        try:
+            self.overlay.update_status("Cleaning up...")
+            self.overlay.cleanup()
+        except Exception as e:
+            print(f"Error during cleanup: {str(e)}")
+
+    
     def run(self):
         """
         Execute the task for the current page.
         """
-        # Initialize the scroll amount per click and the length of current page
-        print("Meaturing scrolling parameters ...")
-        self._intialize_scrolling_parameters()
-        
-        print("Detecting all corresponding coordinates ...")
-        self.get_all_coordinates_on_page()
-        
-        for column_name, column_value in self.input_information.items():
-            print(column_name, column_value)
-            print(type(column_name), type(column_value))
-            if column_name in ["legal_sex", "state", "patient_relationship_primary", "patient_relationship_second"]:
-                self.fill_dropdown_column(column_name, column_value)
-            elif column_name in ["insurance_co_primary", "insurance_co_second", "facility", "billing_provider"]:
-                self.fill_popout_column(column_name, column_value)
-            elif column_name in ["insurance_type_primary", "insurance_type_second"]:
-                self.fill_searchbox_column(column_name, column_value)
-            elif column_name in ["patient_id"]:
-                self.fill_visit_patient_id(column_name, column_value)
-            elif column_name in ["provider_id"]:
-                self.fill_visit_provider_id(column_name, column_value)
-            elif column_name in ["icd10_codes"]:
-                self.fill_ICD_10_codes(column_name, column_value)
-            elif column_name in ["cpt_codes"]:
-                self.fill_CPT_codes(column_name, column_value)
-            # Numerical columns do NOT allow paste action
-            elif column_name in ["birth_date", "ssn", "zip_code", "cell_phone", "hospital_dates"]:
-                self.fill_inputbox_column(column_name, column_value, can_paste=False)
-            else:
-                self.fill_inputbox_column(column_name, column_value)
+        try:
+            self.overlay.set_state(OverlayState.RUNNING)
+            self.overlay.update_status("Starting task...")
+            
+            self._intialize_scrolling_parameters()
+            self.get_all_coordinates_on_page()
+            
+            total_items = len(self.input_information)
+            for idx, (column_name, column_value) in enumerate(self.input_information.items(), 1):
+                self.overlay.update_status(f"Processing data ({idx}/{total_items})")
+                
+                try:
+                    if column_name in ["legal_sex", "state", "patient_relationship_primary", "patient_relationship_second"]:
+                        self.fill_dropdown_column(column_name, column_value)
+                    elif column_name in ["insurance_co_primary", "insurance_co_second", "facility", "billing_provider"]:
+                        self.fill_popout_column(column_name, column_value)
+                    elif column_name in ["insurance_type_primary", "insurance_type_second"]:
+                        self.fill_searchbox_column(column_name, column_value)
+                    elif column_name in ["patient_id"]:
+                        self.fill_visit_patient_id(column_name, column_value)
+                    elif column_name in ["provider_id"]:
+                        self.fill_visit_provider_id(column_name, column_value)
+                    elif column_name in ["icd10_codes"]:
+                        self.fill_ICD_10_codes(column_name, column_value)
+                    elif column_name in ["cpt_codes"]:
+                        self.fill_CPT_codes(column_name, column_value)
+                    elif column_name in ["birth_date", "ssn", "zip_code", "cell_phone", "hospital_dates"]:
+                        self.fill_inputbox_column(column_name, column_value, can_paste=False)
+                    else:
+                        self.fill_inputbox_column(column_name, column_value)
+                except Exception as e:
+                    self.overlay.update_status(f"Error processing {column_name}: {str(e)}")
+                    raise e
 
-        # Back to top
-        self.control.mouse_scroll(self.scroll_click_now + 10)
-        
-        return
-
-
+            # Back to top
+            self.control.mouse_scroll(self.scroll_click_now + 10)
+            self.overlay.update_status("Task completed successfully")
+            self.overlay.set_state(OverlayState.READY)
+            
+        except Exception as e:
+            self.overlay.update_status(f"Task failed: {str(e)}")
+            self.overlay.set_state(OverlayState.RUNNING)  # Red to indicate error
+            raise e
 
 
 
 def test_add_new_patient(task_name, patient_input, insurance_input):
-    assistant = OfficeAllyAssistant(page="patient", input_information=patient_input)
-    time.sleep(2)
+    assistant = None
+    try:
+        assistant = OfficeAllyAssistant(page="patient", input_information=patient_input)
+        time.sleep(2)  # Allow overlay to initialize
 
-    # Go to the task page
-    assistant.assign_task(task_name=task_name)
-    
-    # Fill patient information
-    assistant.run()
+        # Go to the task page
+        assistant.overlay.update_status(f"Task: ADD NEW PATIENT...")
+        assistant.assign_task(task_name=task_name)
+        
+        # Fill patient information
+        assistant.run()
 
-    # Fill insurance information
-    assistant.change_page_within_task(page="insurance", input_information=insurance_input)
-    assistant.run()
+        # Fill insurance information
+        assistant.overlay.update_status("Switching to insurance page...")
+        assistant.change_page_within_task(page="insurance", input_information=insurance_input)
+        assistant.run()
+
+        assistant.overlay.set_state(OverlayState.READY)
+        assistant.overlay.update_status("Task done.")
+        time.sleep(3)
+
+    except Exception as e:
+        if assistant and assistant.overlay:
+            assistant.overlay.update_status(f"Process failed: {str(e)}")
+            assistant.overlay.set_state(OverlayState.RUNNING)  # Red to indicate error
+        raise e
+    finally:
+        if assistant:
+            assistant.cleanup()
 
 def test_add_new_visit(task_name, visit_info, billing_info, billing_options):
-    assistant = OfficeAllyAssistant(page="visit_info", input_information=visit_info)
-    time.sleep(2)
+    assistant = None
+    try:
+        assistant = OfficeAllyAssistant(page="visit_info", input_information=visit_info)
+        time.sleep(2)  # Allow overlay to initialize
 
-    # Go to the task page
-    assistant.assign_task(task_name=task_name)
-    
-    # Fill visit info page
-    assistant.run()
+        # Go to the task page
+        assistant.overlay.update_status(f"Task: ADD NEW VISIT...")
+        assistant.assign_task(task_name=task_name)
+        
+        # Fill visit info page
+        assistant.run()
 
-    # Fill billing info page
-    assistant.change_page_within_task(page="billing_info", input_information=billing_info)
-    # Make sure the type is ICD 10
-    if assistant.get_coordinates("ICD_type_9_to_10"):
-        assistant.control.mouse_move(assistant.aligner.current_x, assistant.aligner.current_y)
-        assistant.control.mouse_click()
-    assistant.run()
+        # Fill billing info page
+        assistant.overlay.update_status("Switching to billing info page...")
+        assistant.change_page_within_task(page="billing_info", input_information=billing_info)
+        
+        if assistant.get_coordinates("ICD_type_9_to_10"):
+            assistant.overlay.update_status("Switching to ICD-10...")
+            assistant.control.mouse_move(assistant.aligner.current_x, assistant.aligner.current_y)
+            assistant.control.mouse_click()
+            
+        assistant.run()
+        assistant.overlay.set_state(OverlayState.READY)
+        assistant.overlay.update_status("Task done.")
+        time.sleep(3)
 
-    # Fill billing options page
-    assistant.change_page_within_task(page="billing_options", input_information=billing_options)
-    assistant.run()
+        # Fill billing options page
+        assistant.overlay.update_status("Switching to billing options page...")
+        assistant.change_page_within_task(page="billing_options", input_information=billing_options)
+        assistant.run()
+
+    except Exception as e:
+        if assistant and assistant.overlay:
+            assistant.overlay.update_status(f"Process failed: {str(e)}")
+            assistant.overlay.set_state(OverlayState.RUNNING)  # Red to indicate error
+        raise e
+    finally:
+        if assistant:
+            assistant.cleanup()
 
     
 
@@ -454,14 +531,14 @@ if __name__ == "__main__":
     test_billing_options = {
         "facility" : "SACF",
         "billing_provider": "",
-        "hospital_dates": "10242024"
+        "hospital_dates": "10252024"
 
     }
 
 
     start = time.time()
-    # test_add_new_patient("add_new_patient", test_patient_input, test_insurance_input)
-    test_add_new_visit("add_new_visit", test_visit_info, test_billing_info, test_billing_options)
+    test_add_new_patient("add_new_patient", test_patient_input, test_insurance_input)
+    # test_add_new_visit("add_new_visit", test_visit_info, test_billing_info, test_billing_options)
     end = time.time()
     print(f"Total process time: {end - start} secs")
     # Need a uniform checking methods for window loading, current too hard-coding

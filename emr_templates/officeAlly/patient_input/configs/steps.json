@@ -1,0 +1,332 @@
+{
+    "last_name": [
+        [
+            "mouse_move",
+            {
+                "smooth": true
+            }
+        ],
+        [
+            "mouse_click",
+            {
+                "clicks": 1,
+                "button": "left",
+                "interval": 0.1
+            }
+        ],
+        [
+            "keyboard_write",
+            {
+                "can_paste": true,
+                "interval": 0.01
+            }
+        ]
+    ],
+    "first_name": [
+        [
+            "mouse_move",
+            {
+                "smooth": true
+            }
+        ],
+        [
+            "mouse_click",
+            {
+                "clicks": 1,
+                "button": "left",
+                "interval": 0.1
+            }
+        ],
+        [
+            "keyboard_write",
+            {
+                "can_paste": true,
+                "interval": 0.01
+            }
+        ]
+    ],
+    "birth_date": [
+        [
+            "mouse_move",
+            {
+                "smooth": true
+            }
+        ],
+        [
+            "mouse_click",
+            {
+                "clicks": 1,
+                "button": "left",
+                "interval": 0.1
+            }
+        ],
+        [
+            "keyboard_write",
+            {
+                "can_paste": false,
+                "interval": 0.01
+            }
+        ]
+    ],
+    "legal_sex": [
+        [
+            "check_selection_options",
+            {}
+        ],
+        [
+            "mouse_move",
+            {
+                "smooth": true
+            }
+        ],
+        [
+            "mouse_click",
+            {
+                "clicks": 1,
+                "button": "left",
+                "interval": 0.1
+            }
+        ],
+        [
+            "keyboard_hotkey",
+            {
+                "keys": [
+                    "command",
+                    "up"
+                ],
+                "interval": 0.1
+            }
+        ],
+        [
+            "keyboard_press",
+            {
+                "key": "space",
+                "presses": 1,
+                "interval": 0.1
+            }
+        ],
+        [
+            "keyboard_release_all_keys",
+            {}
+        ],
+        [
+            "keyboard_press",
+            {
+                "key": null,
+                "presses": null,
+                "interval": 0.1
+            }
+        ]
+    ],
+    "ssn": [
+        [
+            "mouse_move",
+            {
+                "smooth": true
+            }
+        ],
+        [
+            "mouse_click",
+            {
+                "clicks": 1,
+                "button": "left",
+                "interval": 0.1
+            }
+        ],
+        [
+            "keyboard_write",
+            {
+                "can_paste": false,
+                "interval": 0.01
+            }
+        ]
+    ],
+    "address1": [
+        [
+            "mouse_move",
+            {
+                "smooth": true
+            }
+        ],
+        [
+            "mouse_click",
+            {
+                "clicks": 1,
+                "button": "left",
+                "interval": 0.1
+            }
+        ],
+        [
+            "keyboard_write",
+            {
+                "can_paste": true,
+                "interval": 0.01
+            }
+        ]
+    ],
+    "address2": [
+        [
+            "mouse_move",
+            {
+                "smooth": true
+            }
+        ],
+        [
+            "mouse_click",
+            {
+                "clicks": 1,
+                "button": "left",
+                "interval": 0.1
+            }
+        ],
+        [
+            "keyboard_write",
+            {
+                "can_paste": true,
+                "interval": 0.01
+            }
+        ]
+    ],
+    "city": [
+        [
+            "mouse_move",
+            {
+                "smooth": true
+            }
+        ],
+        [
+            "mouse_click",
+            {
+                "clicks": 1,
+                "button": "left",
+                "interval": 0.1
+            }
+        ],
+        [
+            "keyboard_write",
+            {
+                "can_paste": true,
+                "interval": 0.01
+            }
+        ]
+    ],
+    "state": [
+        [
+            "check_selection_options",
+            {}
+        ],
+        [
+            "mouse_move",
+            {
+                "smooth": true
+            }
+        ],
+        [
+            "mouse_click",
+            {
+                "clicks": 1,
+                "button": "left",
+                "interval": 0.1
+            }
+        ],
+        [
+            "keyboard_hotkey",
+            {
+                "keys": [
+                    "command",
+                    "up"
+                ],
+                "interval": 0.1
+            }
+        ],
+        [
+            "keyboard_press",
+            {
+                "key": "space",
+                "presses": 1,
+                "interval": 0.1
+            }
+        ],
+        [
+            "keyboard_release_all_keys",
+            {}
+        ],
+        [
+            "keyboard_press",
+            {
+                "key": null,
+                "presses": null,
+                "interval": 0.1
+            }
+        ]
+    ],
+    "zip_code": [
+        [
+            "mouse_move",
+            {
+                "smooth": true
+            }
+        ],
+        [
+            "mouse_click",
+            {
+                "clicks": 1,
+                "button": "left",
+                "interval": 0.1
+            }
+        ],
+        [
+            "keyboard_write",
+            {
+                "can_paste": false,
+                "interval": 0.01
+            }
+        ]
+    ],
+    "cell_phone": [
+        [
+            "mouse_move",
+            {
+                "smooth": true
+            }
+        ],
+        [
+            "mouse_click",
+            {
+                "clicks": 1,
+                "button": "left",
+                "interval": 0.1
+            }
+        ],
+        [
+            "keyboard_write",
+            {
+                "can_paste": false,
+                "interval": 0.01
+            }
+        ]
+    ],
+    "email": [
+        [
+            "mouse_move",
+            {
+                "smooth": true
+            }
+        ],
+        [
+            "mouse_click",
+            {
+                "clicks": 1,
+                "button": "left",
+                "interval": 0.1
+            }
+        ],
+        [
+            "keyboard_write",
+            {
+                "can_paste": true,
+                "interval": 0.01
+            }
+        ]
+    ]
+}

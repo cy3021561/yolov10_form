@@ -1,5 +1,5 @@
 {
-    "base_dir": "./officeAlly_templates",
+    "base_dir": "./emr_templates/officeAlly",
     "general_paths": {
         "images": "general/images",
         "configs": "general/configs"

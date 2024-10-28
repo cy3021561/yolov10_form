@@ -5,18 +5,18 @@ import time
 from computer.control import Control
 from computer.screen_effect import ScreenOverlay, OverlayState
 from template_alignment.template_alignment import TemplateAligner
-from utils.generate_selection_list import load_dictionary
 
 
 
-class OfficeAllyAssistant:
-    def __init__(self, page="general", input_information=None, template_img_dir=None, template_config_dir=None):
+class EMRAssistant:
+    def __init__(self, page="general", config_path="./emr_templates/officeAlly/config.json", input_information=None, template_img_dir=None, template_config_dir=None):
         """
         Initialize the assistant with page type and optional custom template directories.
         """
         # Initialize basic attributes first
         self.operating_system = platform.system()
         self.page = page
+        self.config_path = config_path
         self.input_information = input_information
         self.modifier_key = self._initialize_modifier_key()
         self.scroll_amount_per_click = None
@@ -33,7 +33,7 @@ class OfficeAllyAssistant:
         
         try:
             # Load configurations
-            self.config_data = self._load_config()
+            self.config_data = self._load_config(self.config_path)
             self.general_img_dir = os.path.join(self.config_data["base_dir"], self.config_data["general_paths"]["images"])
             self.general_config_dir = os.path.join(self.config_data["base_dir"], self.config_data["general_paths"]["configs"])
 
@@ -55,11 +55,10 @@ class OfficeAllyAssistant:
         else:
             return "ctrl"
 
-    def _load_config(self):
+    def _load_config(self, config_path):
         """
         Loads the JSON configuration file.
         """
-        config_path = './officeAlly_templates/config.json'  # Update with your config file path
         if not os.path.exists(config_path):
             raise FileNotFoundError(f"Configuration file not found at {config_path}")
         
@@ -82,7 +81,7 @@ class OfficeAllyAssistant:
 
         return img_dir, config_dir
     
-    def _intialize_scrolling_parameters(self):
+    def get_scrolling_parameters(self):
         self.overlay.set_state(OverlayState.RUNNING)
         self.overlay.update_status("Initializing scrolling parameters...")
         
@@ -202,7 +201,7 @@ class OfficeAllyAssistant:
         if column_name in self.page_elements_coors:
             coor_x, coor_y = self.scroll_and_get_coors(column_name)
             config_pth = os.path.join(self.template_config_dir, column_name + ".json")
-            config_dict = load_dictionary(config_pth)
+            config_dict = self._load_config(config_pth)
             try:
                 press_key, press_time = config_dict[column_value]
             except Exception as e:
@@ -284,7 +283,6 @@ class OfficeAllyAssistant:
             # self.control.mouse_click(clicks=1)
 
         return
-                
 
     def fill_visit_provider_id(self, column_name, column_value):
         if column_name in self.page_elements_coors:
@@ -353,7 +351,9 @@ class OfficeAllyAssistant:
                 self.control.keyboard_write(pointer, copy_paste=False)
 
     def cleanup(self):
-        """Clean up resources"""
+        """
+        Clean up resources
+        """
         try:
             self.overlay.update_status("Cleaning up...")
             self.overlay.cleanup()
@@ -369,7 +369,7 @@ class OfficeAllyAssistant:
             self.overlay.set_state(OverlayState.RUNNING)
             self.overlay.update_status("Starting task...")
             
-            self._intialize_scrolling_parameters()
+            self.get_scrolling_parameters()
             self.get_all_coordinates_on_page()
             
             total_items = len(self.input_information)
@@ -414,7 +414,7 @@ class OfficeAllyAssistant:
 def test_add_new_patient(task_name, patient_input, insurance_input):
     assistant = None
     try:
-        assistant = OfficeAllyAssistant(page="patient", input_information=patient_input)
+        assistant = EMRAssistant(page="patient", input_information=patient_input)
         time.sleep(2)  # Allow overlay to initialize
 
         # Go to the task page
@@ -445,7 +445,7 @@ def test_add_new_patient(task_name, patient_input, insurance_input):
 def test_add_new_visit(task_name, visit_info, billing_info, billing_options):
     assistant = None
     try:
-        assistant = OfficeAllyAssistant(page="visit_info", input_information=visit_info)
+        assistant = EMRAssistant(page="visit_info", input_information=visit_info)
         time.sleep(5)  # Allow overlay to initialize
 
         # Go to the task page

@@ -265,6 +265,7 @@ class OfficeAllyAssistant:
             coor_x, coor_y = self.scroll_and_get_coors(column_name)
             self.control.mouse_move(coor_x, coor_y, smooth=True)
             self.control.mouse_click(clicks=1)
+            time.sleep(1)
             last_name_val = column_value["last_name"]
             birth_date_val = column_value["birth_date"]
             self.control.keyboard_write(last_name_val)
@@ -290,6 +291,7 @@ class OfficeAllyAssistant:
             coor_x, coor_y = self.scroll_and_get_coors(column_name)
             self.control.mouse_move(coor_x, coor_y, smooth=True)
             self.control.mouse_click(clicks=1)
+            time.sleep(1)
             last_name_val = column_value["last_name"]
             self.control.keyboard_write(last_name_val)
             self.control.keyboard_press('enter')
@@ -399,11 +401,11 @@ class OfficeAllyAssistant:
 
             # Back to top
             self.control.mouse_scroll(self.scroll_click_now + 10)
-            self.overlay.update_status("Task completed successfully")
+            self.overlay.update_status("Page completed successfully")
             self.overlay.set_state(OverlayState.READY)
             
         except Exception as e:
-            self.overlay.update_status(f"Task failed: {str(e)}")
+            self.overlay.update_status(f"Page failed: {str(e)}")
             self.overlay.set_state(OverlayState.RUNNING)  # Red to indicate error
             raise e
 
@@ -444,7 +446,7 @@ def test_add_new_visit(task_name, visit_info, billing_info, billing_options):
     assistant = None
     try:
         assistant = OfficeAllyAssistant(page="visit_info", input_information=visit_info)
-        time.sleep(2)  # Allow overlay to initialize
+        time.sleep(5)  # Allow overlay to initialize
 
         # Go to the task page
         assistant.overlay.update_status(f"Task: ADD NEW VISIT...")
@@ -463,15 +465,15 @@ def test_add_new_visit(task_name, visit_info, billing_info, billing_options):
             assistant.control.mouse_click()
             
         assistant.run()
-        assistant.overlay.set_state(OverlayState.READY)
-        assistant.overlay.update_status("Task done.")
-        time.sleep(3)
 
         # Fill billing options page
         assistant.overlay.update_status("Switching to billing options page...")
         assistant.change_page_within_task(page="billing_options", input_information=billing_options)
         assistant.run()
 
+        assistant.overlay.set_state(OverlayState.READY)
+        assistant.overlay.update_status("Task done.")
+        time.sleep(3)
     except Exception as e:
         if assistant and assistant.overlay:
             assistant.overlay.update_status(f"Process failed: {str(e)}")
@@ -537,8 +539,8 @@ if __name__ == "__main__":
 
 
     start = time.time()
-    test_add_new_patient("add_new_patient", test_patient_input, test_insurance_input)
-    # test_add_new_visit("add_new_visit", test_visit_info, test_billing_info, test_billing_options)
+    # test_add_new_patient("add_new_patient", test_patient_input, test_insurance_input)
+    test_add_new_visit("add_new_visit", test_visit_info, test_billing_info, test_billing_options)
     end = time.time()
     print(f"Total process time: {end - start} secs")
     # Need a uniform checking methods for window loading, current too hard-coding

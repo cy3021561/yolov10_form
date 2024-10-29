@@ -233,14 +233,10 @@ class EMRAssistant:
             self.control.mouse_move(coor_x, coor_y, smooth=True)
             self.control.mouse_click(clicks=1)
             time.sleep(1)
-            # while not self.get_coordinates('loadcheck_insurance_list'):
-            #     time.sleep(1)
-            #     print("Still loading...")
+
             self.control.keyboard_write(column_value)
             self.control.keyboard_press('enter')
             
-            # if self.get_coordinates("no_results"):
-            #     self.control.keyboard_hotkey(self.modifier_key, 'w')
             time.sleep(1)
             if self.get_coordinates("select_button"):
                 self.control.mouse_move(self.aligner.current_x, self.aligner.current_y, smooth=True)
@@ -279,8 +275,6 @@ class EMRAssistant:
 
             self.control.keyboard_press('tab', presses=16)
             self.control.keyboard_press('enter')
-            # self.control.mouse_move(self.aligner.current_x, self.aligner.current_y, smooth=True)
-            # self.control.mouse_click(clicks=1)
 
         return
 

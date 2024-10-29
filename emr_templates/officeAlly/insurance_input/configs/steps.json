@@ -1,5 +1,5 @@
 {
-    "last_name": [
+    "insurance_type_primary": [
         [
             "mouse_move",
             {
@@ -20,9 +20,41 @@
                 "can_paste": true,
                 "interval": 0.01
             }
+        ],
+        [
+            "keyboard_press",
+            {
+                "key": "enter",
+                "presses": 1,
+                "interval": 0.1
+            }
+        ],
+        [
+            "keyboard_press",
+            {
+                "key": "tab",
+                "presses": 1,
+                "interval": 0.1
+            }
+        ],
+        [
+            "keyboard_press",
+            {
+                "key": "space",
+                "presses": 1,
+                "interval": 0.1
+            }
+        ],
+        [
+            "keyboard_press",
+            {
+                "key": "esc",
+                "presses": 1,
+                "interval": 0.1
+            }
         ]
     ],
-    "first_name": [
+    "insurance_co_primary": [
         [
             "mouse_move",
             {
@@ -35,6 +67,12 @@
                 "clicks": 1,
                 "button": "left",
                 "interval": 0.1
+            }
+        ],
+        [
+            "wait",
+            {
+                "seconds": 1
             }
         ],
         [
@@ -43,9 +81,27 @@
                 "can_paste": true,
                 "interval": 0.01
             }
-        ]
-    ],
-    "birth_date": [
+        ],
+        [
+            "keyboard_press",
+            {
+                "key": "enter",
+                "presses": 1,
+                "interval": 0.1
+            }
+        ],
+        [
+            "wait",
+            {
+                "seconds": 1
+            }
+        ],
+        [
+            "wait_for_template",
+            {
+                "template_name": "select_button"
+            }
+        ],
         [
             "mouse_move",
             {
@@ -61,14 +117,13 @@
             }
         ],
         [
-            "keyboard_write",
+            "wait",
             {
-                "can_paste": false,
-                "interval": 0.01
+                "seconds": 1
             }
         ]
     ],
-    "legal_sex": [
+    "patient_relationship_primary": [
         [
             "check_selection_options",
             {}
@@ -118,30 +173,7 @@
             }
         ]
     ],
-    "ssn": [
-        [
-            "mouse_move",
-            {
-                "smooth": true
-            }
-        ],
-        [
-            "mouse_click",
-            {
-                "clicks": 1,
-                "button": "left",
-                "interval": 0.1
-            }
-        ],
-        [
-            "keyboard_write",
-            {
-                "can_paste": false,
-                "interval": 0.01
-            }
-        ]
-    ],
-    "address1": [
+    "subscriber_id_primary": [
         [
             "mouse_move",
             {
@@ -164,7 +196,7 @@
             }
         ]
     ],
-    "address2": [
+    "insurance_type_second": [
         [
             "mouse_move",
             {
@@ -185,9 +217,41 @@
                 "can_paste": true,
                 "interval": 0.01
             }
+        ],
+        [
+            "keyboard_press",
+            {
+                "key": "enter",
+                "presses": 1,
+                "interval": 0.1
+            }
+        ],
+        [
+            "keyboard_press",
+            {
+                "key": "tab",
+                "presses": 1,
+                "interval": 0.1
+            }
+        ],
+        [
+            "keyboard_press",
+            {
+                "key": "space",
+                "presses": 1,
+                "interval": 0.1
+            }
+        ],
+        [
+            "keyboard_press",
+            {
+                "key": "esc",
+                "presses": 1,
+                "interval": 0.1
+            }
         ]
     ],
-    "city": [
+    "insurance_co_second": [
         [
             "mouse_move",
             {
@@ -203,14 +267,60 @@
             }
         ],
         [
+            "wait",
+            {
+                "seconds": 1
+            }
+        ],
+        [
             "keyboard_write",
             {
                 "can_paste": true,
                 "interval": 0.01
             }
+        ],
+        [
+            "keyboard_press",
+            {
+                "key": "enter",
+                "presses": 1,
+                "interval": 0.1
+            }
+        ],
+        [
+            "wait",
+            {
+                "seconds": 1
+            }
+        ],
+        [
+            "wait_for_template",
+            {
+                "template_name": "select_button"
+            }
+        ],
+        [
+            "mouse_move",
+            {
+                "smooth": true
+            }
+        ],
+        [
+            "mouse_click",
+            {
+                "clicks": 1,
+                "button": "left",
+                "interval": 0.1
+            }
+        ],
+        [
+            "wait",
+            {
+                "seconds": 1
+            }
         ]
     ],
-    "state": [
+    "patient_relationship_second": [
         [
             "check_selection_options",
             {}
@@ -260,53 +370,7 @@
             }
         ]
     ],
-    "zip_code": [
-        [
-            "mouse_move",
-            {
-                "smooth": true
-            }
-        ],
-        [
-            "mouse_click",
-            {
-                "clicks": 1,
-                "button": "left",
-                "interval": 0.1
-            }
-        ],
-        [
-            "keyboard_write",
-            {
-                "can_paste": false,
-                "interval": 0.01
-            }
-        ]
-    ],
-    "cell_phone": [
-        [
-            "mouse_move",
-            {
-                "smooth": true
-            }
-        ],
-        [
-            "mouse_click",
-            {
-                "clicks": 1,
-                "button": "left",
-                "interval": 0.1
-            }
-        ],
-        [
-            "keyboard_write",
-            {
-                "can_paste": false,
-                "interval": 0.01
-            }
-        ]
-    ],
-    "email": [
+    "subscriber_id_second": [
         [
             "mouse_move",
             {

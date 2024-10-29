@@ -1,0 +1,177 @@
+{
+    "icd10_codes": [
+        [
+            "mouse_move",
+            {
+                "smooth": true
+            }
+        ],
+        [
+            "mouse_click",
+            {
+                "clicks": 1,
+                "button": "left",
+                "interval": 0.1
+            }
+        ],
+        [
+            "loop_array",
+            {
+                "steps": [
+                    [
+                        "keyboard_write",
+                        {
+                            "can_paste": true,
+                            "interval": 0.01
+                        }
+                    ],
+                    [
+                        "wait",
+                        {
+                            "seconds": 1
+                        }
+                    ],
+                    [
+                        "keyboard_press",
+                        {
+                            "key": "down",
+                            "presses": 1,
+                            "interval": 0.1
+                        }
+                    ],
+                    [
+                        "keyboard_press",
+                        {
+                            "key": "enter",
+                            "presses": 1,
+                            "interval": 0.1
+                        }
+                    ],
+                    [
+                        "keyboard_press",
+                        {
+                            "key": "tab",
+                            "presses": 2,
+                            "interval": 0.1
+                        }
+                    ]
+                ]
+            }
+        ]
+    ],
+    "cpt_codes": [
+        [
+            "mouse_move",
+            {
+                "smooth": true
+            }
+        ],
+        [
+            "mouse_click",
+            {
+                "clicks": 1,
+                "button": "left",
+                "interval": 0.1
+            }
+        ],
+        [
+            "loop_tuple_array",
+            {
+                "steps": [
+                    [
+                        "wait",
+                        {
+                            "seconds": 1
+                        }
+                    ],
+                    [
+                        "keyboard_write",
+                        {
+                            "tuple_index": 0,
+                            "can_paste": true,
+                            "interval": 0.01
+                        }
+                    ],
+                    [
+                        "keyboard_press",
+                        {
+                            "key": "enter",
+                            "presses": 1,
+                            "interval": 0.1
+                        }
+                    ],
+                    [
+                        "wait_for_template",
+                        {
+                            "template_name": "select_button"
+                        }
+                    ],
+                    [
+                        "wait",
+                        {
+                            "seconds": 1
+                        }
+                    ],
+                    [
+                        "keyboard_press",
+                        {
+                            "key": "tab",
+                            "presses": 11,
+                            "interval": 0.1
+                        }
+                    ],
+                    [
+                        "keyboard_press",
+                        {
+                            "key": "enter",
+                            "presses": 1,
+                            "interval": 0.1
+                        }
+                    ],
+                    [
+                        "keyboard_press",
+                        {
+                            "key": "tab",
+                            "presses": 5,
+                            "interval": 0.1
+                        }
+                    ],
+                    [
+                        "keyboard_write",
+                        {
+                            "tuple_index": 1,
+                            "can_paste": false,
+                            "interval": 0.01
+                        }
+                    ],
+                    [
+                        "keyboard_press",
+                        {
+                            "key": "tab",
+                            "presses": 11,
+                            "interval": 0.1
+                        }
+                    ],
+                    [
+                        "keyboard_press",
+                        {
+                            "key": "enter",
+                            "presses": 1,
+                            "interval": 0.1
+                        }
+                    ]
+                ]
+            }
+        ],
+        [
+            "keyboard_hotkey",
+            {
+                "keys": [
+                    "<MODIFIER_KEY>",
+                    "w"
+                ],
+                "interval": 0.1
+            }
+        ]
+    ]
+}

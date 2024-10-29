@@ -1,0 +1,154 @@
+{
+    "patient_id": [
+        [
+            "mouse_move",
+            {
+                "smooth": true
+            }
+        ],
+        [
+            "mouse_click",
+            {
+                "clicks": 1,
+                "button": "left",
+                "interval": 0.1
+            }
+        ],
+        [
+            "wait",
+            {
+                "seconds": 1
+            }
+        ],
+        [
+            "keyboard_write",
+            {
+                "text_key": "last_name",
+                "can_paste": true,
+                "interval": 0.01
+            }
+        ],
+        [
+            "keyboard_press",
+            {
+                "key": "tab",
+                "presses": 4,
+                "interval": 0.1
+            }
+        ],
+        [
+            "keyboard_write",
+            {
+                "text_key": "birth_date",
+                "can_paste": false,
+                "interval": 0.01
+            }
+        ],
+        [
+            "keyboard_press",
+            {
+                "key": "tab",
+                "presses": 4,
+                "interval": 0.1
+            }
+        ],
+        [
+            "keyboard_press",
+            {
+                "key": "enter",
+                "presses": 1,
+                "interval": 0.1
+            }
+        ],
+        [
+            "wait",
+            {
+                "seconds": 1
+            }
+        ],
+        [
+            "wait_for_template",
+            {
+                "template_name": "select_button"
+            }
+        ],
+        [
+            "keyboard_press",
+            {
+                "key": "tab",
+                "presses": 16,
+                "interval": 0.1
+            }
+        ],
+        [
+            "keyboard_press",
+            {
+                "key": "enter",
+                "presses": 1,
+                "interval": 0.1
+            }
+        ]
+    ],
+    "provider_id": [
+        [
+            "mouse_move",
+            {
+                "smooth": true
+            }
+        ],
+        [
+            "mouse_click",
+            {
+                "clicks": 1
+            }
+        ],
+        [
+            "wait",
+            {
+                "seconds": 1
+            }
+        ],
+        [
+            "keyboard_write",
+            {
+                "text_key": "last_name",
+                "can_paste": true,
+                "interval": 0.01
+            }
+        ],
+        [
+            "keyboard_press",
+            {
+                "key": "enter"
+            }
+        ],
+        [
+            "wait",
+            {
+                "seconds": 1
+            }
+        ],
+        [
+            "wait_for_template",
+            {
+                "template_name": "select_button"
+            }
+        ],
+        [
+            "keyboard_press",
+            {
+                "key": "tab",
+                "presses": 12,
+                "interval": 0.1
+            }
+        ],
+        [
+            "keyboard_press",
+            {
+                "key": "enter",
+                "presses": 1,
+                "interval": 0.1
+            }
+        ]
+    ]
+}

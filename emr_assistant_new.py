@@ -9,7 +9,6 @@ from template_alignment.template_alignment import TemplateAligner
 
 
 class EMRAssistant:
-    # Keep all the initialization methods the same...
     def __init__(self, page="general", config_path="./emr_templates/officeAlly/config.json", input_information=None, template_img_dir=None, template_config_dir=None):
         """
         Initialize the assistant with page type and optional custom template directories.
@@ -82,6 +81,29 @@ class EMRAssistant:
 
         return img_dir, config_dir
     
+    def _handle_array_loop(self, steps, array_values):
+        """Handle iteration over simple arrays"""
+        for value in array_values:
+            for step in steps:
+                action_name, action_params = step
+                # Set text directly for keyboard_write actions
+                if action_name == "keyboard_write":
+                    action_params = action_params.copy()  # Create a copy to avoid modifying original
+                    action_params["text"] = value
+                self.execute_action(action_name, action_params, value)
+
+    def _handle_tuple_array_loop(self, steps, tuple_array):
+        """Handle iteration over arrays of tuples"""
+        for tuple_value in tuple_array:
+            for step in steps:
+                action_name, action_params = step
+                # For keyboard_write, use tuple_index to get the right value
+                if action_name == "keyboard_write":
+                    action_params = action_params.copy()  # Create a copy to avoid modifying original
+                    index = action_params.get("tuple_index", 0)
+                    action_params["text"] = tuple_value[index]
+                self.execute_action(action_name, action_params, tuple_value)
+    
     def get_scrolling_parameters(self):
         self.overlay.set_state(OverlayState.RUNNING)
         self.overlay.update_status("Initializing scrolling parameters...")
@@ -92,8 +114,6 @@ class EMRAssistant:
         self.control.mouse_move(self.aligner.screen_width // 2, self.aligner.screen_height // 2)
         self.control.mouse_scroll(100)
         if self.get_coordinates(anchor_template):
-            # self.control.mouse_move(self.aligner.current_x, self.aligner.current_y, smooth=True)
-            # self.control.mouse_click(clicks=1)
             first_y = self.aligner.current_y
             self.control.mouse_scroll(-1)
             time.sleep(0.5)
@@ -196,15 +216,36 @@ class EMRAssistant:
         """
         pass
 
-    def execute_action(self, action_name, params):
+    def check_selection_options(self, column_name):
+        config_pth = os.path.join(self.template_config_dir, column_name + ".json")
+        try:
+            selection_options = self._load_config(config_pth)
+            return selection_options
+        
+        except Exception as e:
+            raise RuntimeError(
+                f"An error occurred while finding value in template dictionary: {e}"
+            )
+
+    def execute_action(self, action_name, params, field_value=None):
         """
         Execute a single action based on the action name and parameters.
         """
+        print(action_name, params, field_value)
+        def process_text_value(params, field_value):
+            if isinstance(field_value, dict):
+                return field_value.get(params.get("text_key", ""))
+            elif isinstance(field_value, (list, tuple)):
+                if "tuple_index" in params:
+                    return field_value[params.get("tuple_index")]
+                return field_value
+            return field_value
+        
         action_map = {
             "mouse_move": lambda p: self.control.mouse_move(
                 coor_x=p.get("x"),
                 coor_y=p.get("y"),
-                smooth=p.get("smooth", True)  # Default to True for smooth movement
+                smooth=p.get("smooth", True)
             ),
             
             "mouse_click": lambda p: self.control.mouse_click(
@@ -214,7 +255,7 @@ class EMRAssistant:
             ),
             
             "keyboard_write": lambda p: self.control.keyboard_write(
-                text=p.get("text", ""),
+                text=p.get("text") if "text" in p else process_text_value(p, field_value),
                 interval=p.get("interval", 0.01),
                 copy_paste=p.get("can_paste", True)
             ),
@@ -226,7 +267,8 @@ class EMRAssistant:
             ),
             
             "keyboard_hotkey": lambda p: self.control.keyboard_hotkey(
-                *p.get("keys", []),
+                *(self.modifier_key if key == "<MODIFIER_KEY>" else key 
+                for key in p.get("keys", [])),
                 interval=p.get("interval", 0.1)
             ),
             
@@ -235,8 +277,12 @@ class EMRAssistant:
             "mouse_scroll": lambda p: self.control.mouse_scroll(
                 clicks=p.get("clicks", 0)
             ),
-            
-            "check_selection_options": lambda p: None,  # Placeholder
+
+            "wait_for_template": lambda p: self.get_coordinates(p.get("template_name")),
+
+            "loop_array": lambda p: self._handle_array_loop(p.get("steps", []), field_value),
+
+            "loop_tuple_array": lambda p: self._handle_tuple_array_loop(p.get("steps", []), field_value),
             
             "wait": lambda p: time.sleep(p.get("seconds", 1))
         }
@@ -244,7 +290,16 @@ class EMRAssistant:
         if action_name not in action_map:
             raise ValueError(f"Unknown action: {action_name}")
 
-        action_map[action_name](params)
+        result = action_map[action_name](params)
+    
+        # Special handling for template waiting
+        if action_name == "wait_for_template":
+            if not result:
+                return False
+            # Update coordinates for next mouse move
+            return True
+        
+        return True
 
     def cleanup(self):
         """
@@ -257,7 +312,7 @@ class EMRAssistant:
             print(f"Error during cleanup: {str(e)}")
 
     
-    def run_by_config(self):
+    def run(self):
         """
         Execute the task for the current page using the configuration file.
         """
@@ -273,8 +328,8 @@ class EMRAssistant:
             step_config = self._load_config(os.path.join(self.template_config_dir, "steps.json"))
             
             total_items = len(self.input_information)
-            for idx, (field_name, field_value) in enumerate(self.input_information.items(), 1):
-                self.overlay.update_status(f"Processing field ({idx}/{total_items}): {field_name}")
+            for i, (field_name, field_value) in enumerate(self.input_information.items(), 1):
+                self.overlay.update_status(f"Processing field ({i}/{total_items}): {field_name}")
                 
                 try:
                     # Get the steps for this field
@@ -286,21 +341,45 @@ class EMRAssistant:
                     # Get coordinates for the field if needed
                     if field_name in self.page_elements_coors:
                         x, y = self.scroll_and_get_coors(field_name)
+
+                    # Check if it's a selection button
+                    selection_options = None
                     
                     # Execute each step in the configuration
-                    for step in steps:
+                    total_steps = len(steps)
+                    for j, step in enumerate(steps, 1):
                         action_name, action_params = step
+                        
+                        if action_name == "check_selection_options":
+                            selection_options = self.check_selection_options(field_name)
+                            continue
+                        
+                        if action_name == "wait_for_template":
+                            success = self.execute_action(action_name, action_params)
+                            if success:
+                                # Update coordinates for next mouse move
+                                x, y = self.aligner.current_x, self.aligner.current_y
+                            else:
+                                raise RuntimeError(f"Could not find template: {action_params.get('template_name')}")
+                            continue
 
-                        # Update coordinates in params if needed
-                        if action_name == "mouse_move" and field_name in self.page_elements_coors:
-                            action_params = {"x": x, "y": y}
+                        if action_name == "mouse_move" and x is not None and y is not None:
+                            action_params = {"x": x, "y": y, "smooth": action_params.get("smooth", True)}
 
-                        # Update text value in params if needed
                         if action_name == "keyboard_write":
-                            action_params = {"text": field_value, "can_paste": action_params.get("can_paste", True)}
+                            if isinstance(field_value, dict):
+                                action_params["text_key"] = action_params.get("text_key", "")
+                            else:
+                                action_params["text"] = field_value
+                            action_params["can_paste"] = action_params.get("can_paste", True)
+
+                        if action_name == "keyboard_press" and selection_options and j == total_steps:
+                            press_key, press_time = selection_options[field_value]
+                            action_params = {"key": press_key, "presses": press_time}
+                            selection_options = None
 
                         # Execute the action
-                        self.execute_action(action_name, action_params)
+                        self.execute_action(action_name, action_params, field_value)
 
                 except Exception as e:
                     self.overlay.update_status(f"Error processing field {field_name}: {str(e)}")
@@ -446,8 +525,8 @@ if __name__ == "__main__":
 
 
     start = time.time()
-    # test_add_new_patient("add_new_patient", test_patient_input, test_insurance_input)
-    test_add_new_visit("add_new_visit", test_visit_info, test_billing_info, test_billing_options)
+    test_add_new_patient("add_new_patient", test_patient_input, test_insurance_input)
+    # test_add_new_visit("add_new_visit", test_visit_info, test_billing_info, test_billing_options)
     end = time.time()
     print(f"Total process time: {end - start} secs")
     # Need a uniform checking methods for window loading, current too hard-coding

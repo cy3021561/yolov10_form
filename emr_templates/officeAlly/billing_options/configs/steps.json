@@ -1,0 +1,132 @@
+{
+    "facility": [
+        [
+            "mouse_move",
+            {
+                "smooth": true
+            }
+        ],
+        [
+            "mouse_click",
+            {
+                "clicks": 1,
+                "button": "left",
+                "interval": 0.1
+            }
+        ],
+        [
+            "wait",
+            {
+                "seconds": 1
+            }
+        ],
+        [
+            "keyboard_write",
+            {
+                "can_paste": true,
+                "interval": 0.01
+            }
+        ],
+        [
+            "keyboard_press",
+            {
+                "key": "enter",
+                "presses": 1,
+                "interval": 0.1
+            }
+        ],
+        [
+            "wait",
+            {
+                "seconds": 1
+            }
+        ],
+        [
+            "wait_for_template",
+            {
+                "template_name": "select_button"
+            }
+        ],
+        [
+            "mouse_move",
+            {
+                "smooth": true
+            }
+        ],
+        [
+            "mouse_click",
+            {
+                "clicks": 1,
+                "button": "left",
+                "interval": 0.1
+            }
+        ],
+        [
+            "wait",
+            {
+                "seconds": 1
+            }
+        ]
+    ],
+    "billing_provider": [
+        [
+            "mouse_move",
+            {
+                "smooth": true
+            }
+        ],
+        [
+            "mouse_click",
+            {
+                "clicks": 1,
+                "button": "left",
+                "interval": 0.1
+            }
+        ],
+        [
+            "wait",
+            {
+                "seconds": 1
+            }
+        ],
+        [
+            "keyboard_press",
+            {
+                "key": "tab",
+                "presses": 9,
+                "interval": 0.05
+            }
+        ],
+        [
+            "keyboard_press",
+            {
+                "key": "enter",
+                "presses": 1,
+                "interval": 0.1
+            }
+        ]
+    ],
+    "hospital_dates": [
+        [
+            "mouse_move",
+            {
+                "smooth": true
+            }
+        ],
+        [
+            "mouse_click",
+            {
+                "clicks": 1,
+                "button": "left",
+                "interval": 0.1
+            }
+        ],
+        [
+            "keyboard_write",
+            {
+                "can_paste": false,
+                "interval": 0.01
+            }
+        ]
+    ]
+}

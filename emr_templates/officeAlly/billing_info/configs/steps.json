@@ -17,6 +17,8 @@
         [
             "loop_array",
             {
+                "data_name": "clinical_icd10_codes",
+                "skip_in_last_loop": 1,
                 "steps": [
                     [
                         "keyboard_write",
@@ -77,6 +79,8 @@
         [
             "loop_tuple_array",
             {
+                "data_name": "clinical_cpt_codes",
+                "skip_in_last_loop": 2,
                 "steps": [
                     [
                         "wait",
@@ -161,16 +165,6 @@
                         }
                     ]
                 ]
-            }
-        ],
-        [
-            "keyboard_hotkey",
-            {
-                "keys": [
-                    "<MODIFIER_KEY>",
-                    "w"
-                ],
-                "interval": 0.1
             }
         ]
     ]

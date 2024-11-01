@@ -17,6 +17,7 @@
         [
             "keyboard_write",
             {
+                "data_name": "insurance_primary_type",
                 "can_paste": true,
                 "interval": 0.01
             }
@@ -78,6 +79,7 @@
         [
             "keyboard_write",
             {
+                "data_name": "insurance_primary_company",
                 "can_paste": true,
                 "interval": 0.01
             }
@@ -167,6 +169,7 @@
         [
             "keyboard_press",
             {
+                "data_name": "insurance_primary_relationship",
                 "key": null,
                 "presses": null,
                 "interval": 0.1
@@ -191,6 +194,7 @@
         [
             "keyboard_write",
             {
+                "data_name": "insurance_primary_subscriber_id",
                 "can_paste": true,
                 "interval": 0.01
             }
@@ -214,6 +218,7 @@
         [
             "keyboard_write",
             {
+                "data_name": "insurance_secondary_type",
                 "can_paste": true,
                 "interval": 0.01
             }
@@ -275,6 +280,7 @@
         [
             "keyboard_write",
             {
+                "data_name": "insurance_secondary_company",
                 "can_paste": true,
                 "interval": 0.01
             }
@@ -364,6 +370,7 @@
         [
             "keyboard_press",
             {
+                "data_name": "insurance_secondary_relationship",
                 "key": null,
                 "presses": null,
                 "interval": 0.1
@@ -388,6 +395,7 @@
         [
             "keyboard_write",
             {
+                "data_name": "insurance_secondary_subscriber_id",
                 "can_paste": true,
                 "interval": 0.01
             }

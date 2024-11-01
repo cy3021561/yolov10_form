@@ -17,6 +17,7 @@
         [
             "keyboard_write",
             {
+                "data_name": "person_last_name",
                 "can_paste": true,
                 "interval": 0.01
             }
@@ -40,6 +41,7 @@
         [
             "keyboard_write",
             {
+                "data_name": "person_first_name",
                 "can_paste": true,
                 "interval": 0.01
             }
@@ -63,6 +65,7 @@
         [
             "keyboard_write",
             {
+                "data_name": "person_birth_date",
                 "can_paste": false,
                 "interval": 0.01
             }
@@ -112,6 +115,7 @@
         [
             "keyboard_press",
             {
+                "data_name": "person_sex",
                 "key": null,
                 "presses": null,
                 "interval": 0.1
@@ -136,6 +140,7 @@
         [
             "keyboard_write",
             {
+                "data_name": "person_ssn",
                 "can_paste": false,
                 "interval": 0.01
             }
@@ -159,6 +164,7 @@
         [
             "keyboard_write",
             {
+                "data_name": "contact_address_line1",
                 "can_paste": true,
                 "interval": 0.01
             }
@@ -182,6 +188,7 @@
         [
             "keyboard_write",
             {
+                "data_name": "contact_address_line2",
                 "can_paste": true,
                 "interval": 0.01
             }
@@ -205,6 +212,7 @@
         [
             "keyboard_write",
             {
+                "data_name": "contact_city",
                 "can_paste": true,
                 "interval": 0.01
             }
@@ -254,6 +262,7 @@
         [
             "keyboard_press",
             {
+                "data_name": "contact_state",
                 "key": null,
                 "presses": null,
                 "interval": 0.1
@@ -278,6 +287,7 @@
         [
             "keyboard_write",
             {
+                "data_name": "contact_zip",
                 "can_paste": false,
                 "interval": 0.01
             }
@@ -301,6 +311,7 @@
         [
             "keyboard_write",
             {
+                "data_name": "contact_phone",
                 "can_paste": false,
                 "interval": 0.01
             }
@@ -324,6 +335,7 @@
         [
             "keyboard_write",
             {
+                "data_name": "contact_email",
                 "can_paste": true,
                 "interval": 0.01
             }

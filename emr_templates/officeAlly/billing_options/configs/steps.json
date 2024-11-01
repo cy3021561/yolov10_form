@@ -23,6 +23,7 @@
         [
             "keyboard_write",
             {
+                "data_name": "billing_facility",
                 "can_paste": true,
                 "interval": 0.01
             }
@@ -124,6 +125,7 @@
         [
             "keyboard_write",
             {
+                "data_name": "billing_service_date",
                 "can_paste": false,
                 "interval": 0.01
             }

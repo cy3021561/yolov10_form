@@ -23,7 +23,7 @@
         [
             "keyboard_write",
             {
-                "text_key": "last_name",
+                "data_name": "person_last_name",
                 "can_paste": true,
                 "interval": 0.01
             }
@@ -39,7 +39,7 @@
         [
             "keyboard_write",
             {
-                "text_key": "birth_date",
+                "data_name": "person_birth_date",
                 "can_paste": false,
                 "interval": 0.01
             }
@@ -73,18 +73,16 @@
             }
         ],
         [
-            "keyboard_press",
+            "mouse_move",
             {
-                "key": "tab",
-                "presses": 16,
-                "interval": 0.1
+                "smooth": true
             }
         ],
         [
-            "keyboard_press",
+            "mouse_click",
             {
-                "key": "enter",
-                "presses": 1,
+                "clicks": 1,
+                "button": "left",
                 "interval": 0.1
             }
         ]
@@ -111,7 +109,7 @@
         [
             "keyboard_write",
             {
-                "text_key": "last_name",
+                "data_name": "provider_last_name",
                 "can_paste": true,
                 "interval": 0.01
             }
@@ -135,18 +133,16 @@
             }
         ],
         [
-            "keyboard_press",
+            "mouse_move",
             {
-                "key": "tab",
-                "presses": 12,
-                "interval": 0.1
+                "smooth": true
             }
         ],
         [
-            "keyboard_press",
+            "mouse_click",
             {
-                "key": "enter",
-                "presses": 1,
+                "clicks": 1,
+                "button": "left",
                 "interval": 0.1
             }
         ]
